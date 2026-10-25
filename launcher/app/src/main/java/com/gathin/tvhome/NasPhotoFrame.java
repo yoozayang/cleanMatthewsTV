@@ -55,6 +55,8 @@ final class NasPhotoFrame {
     private boolean paused;
     /** skip() asked for the next photo: it comes even while the frame is focused and paused. */
     private boolean skipRequested;
+    /** The NAS refused the account: no more requests until the settings change (Home recreates this frame). */
+    private boolean refused;
     /** Photos skipped as hidden in one turn before the turn gives up (a list that is almost all hidden). */
     private static final int MAX_HIDDEN_SKIPS = 500;
     private final Runnable tick = this::next;
@@ -156,7 +158,7 @@ final class NasPhotoFrame {
     }
 
     private void next() {
-        if (!running || worker == null) return;
+        if (!running || worker == null || refused) return;
         int w = view.boxWidth();
         int h = view.boxHeight();
         if (w <= 0 || h <= 0) return;   // place() posts the first turn once the box is known
@@ -204,6 +206,8 @@ final class NasPhotoFrame {
                             photo = fetch(path, w, h);
                             label = settings.caption ? caption(path) : "";
                             shownPath = path;
+                        } catch (NasClient.Refused e) {
+                            throw e;
                         } catch (IOException | RuntimeException | OutOfMemoryError e) {
                             Log.w(TAG, "skipped one photo: " + e);
                             NasPhotos.setStatus(context, "photo: " + e.getMessage(), order.length);
@@ -212,6 +216,12 @@ final class NasPhotoFrame {
                     if (photo != null) NasPhotos.setStatus(context, "ok", order.length);
                     else delay = Math.max(delay, 60_000L);
                 }
+            } catch (NasClient.Refused e) {
+                Log.w(TAG, "stopping: " + e.getMessage());
+                NasPhotos.setStatus(context, "refused: " + e.getMessage(), 0);
+                main.post(() -> refused = true);
+                if (busySince == started) busySince = 0;
+                return;
             } catch (IOException | RuntimeException e) {
                 Log.w(TAG, "no photo list: " + e);
                 NasPhotos.setStatus(context, "list: " + e.getMessage(), 0);
@@ -241,6 +251,8 @@ final class NasPhotoFrame {
             IOException failure = null;
             try {
                 NasPhotoIndex.refresh(context, client, settings);
+            } catch (NasClient.Refused e) {
+                throw e;
             } catch (IOException e) {
                 failure = e;
             }
