@@ -149,4 +149,31 @@
     <!-- Cinematic top shelf (cinematic_home): the line under the focused dock app's name; %1$s is when it was
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
+    <!-- NAS photo frame (NasPhotoSettingsActivity): photos from a NAS share in the space above the dock. -->
+    <string name="nas_photos">NAS photos</string>
+    <string name="nas_photos_state">NAS photos: %1$s</string>
+    <string name="nas_enabled_state">Photo frame: %1$s</string>
+    <string name="nas_interval_label">Change every</string>
+    <string name="nas_seconds">%1$d s</string>
+    <string name="nas_minutes">%1$d min</string>
+    <string name="nas_folders_label">Folders</string>
+    <string name="nas_folders_state">Folders: %1$s</string>
+    <string name="nas_folders_all">All folders</string>
+    <string name="nas_folders_count">%1$d folders</string>
+    <string name="nas_folders_none">No photo list yet. Turn the frame on and go back to Home once, then try again.</string>
+    <string name="nas_order_state">Order: %1$s</string>
+    <string name="nas_order_random">Random</string>
+    <string name="nas_order_sequential">In order</string>
+    <string name="nas_jpeg_state">JPEG: %1$s</string>
+    <string name="nas_heic_state">HEIC: %1$s</string>
+    <string name="nas_formats_hint">RAW files and videos are never shown.</string>
+    <string name="nas_formats_one">Keep at least one format on.</string>
+    <string name="nas_caption_state">Folder name under the photo: %1$s</string>
+    <string name="nas_refresh">Fetch the photo list again</string>
+    <string name="nas_refresh_done">The list is fetched again when you go back to Home.</string>
+    <string name="nas_status_unconfigured">No NAS set up yet. Connect one from a computer with tools/nas-photos.sh.</string>
+    <string name="nas_status_waiting">%1$s · not fetched yet</string>
+    <string name="nas_status_ok">%1$s · %2$s photos</string>
+    <string name="nas_status_empty">%1$s · no photos match these folders and formats</string>
+    <string name="nas_status_error">%1$s · last error: %2$s</string>
 </resources>

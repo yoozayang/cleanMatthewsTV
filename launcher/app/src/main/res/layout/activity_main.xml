@@ -30,6 +30,14 @@
         android:layout_height="match_parent"
         android:alpha="0" />
 
+    <!-- NAS photo frame (NasPhotoFrame): photos in the empty space above the dock, placed in code. -->
+    <com.gathin.tvhome.PhotoFrameView
+        android:id="@+id/photoFrame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:importantForAccessibility="no" />
+
     <!-- Race-weekend panel (a theme's race_calendar, see RaceWeekend): in the free space under the clock,
          shown only from shortly before a weekend's first session until the race is over. Updated once a
          minute with the clock, never animated. -->

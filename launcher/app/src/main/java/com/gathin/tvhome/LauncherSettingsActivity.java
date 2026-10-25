@@ -33,6 +33,7 @@ public final class LauncherSettingsActivity extends Activity {
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private TextView wallpaperChoice;
+    private TextView nasPhotosChoice;
     private TextView animationsChoice;
     private TextView advancedChoice;
     private TextView followThemeChoice;
@@ -106,6 +107,8 @@ public final class LauncherSettingsActivity extends Activity {
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
+        nasPhotosChoice = findViewById(R.id.nasPhotosChoice);
+        nasPhotosChoice.setOnClickListener(v -> open(new Intent(this, NasPhotoSettingsActivity.class)));
         animationsChoice = findViewById(R.id.animationsChoice);
         animationsChoice.setOnClickListener(v -> {
             animations = !animations;
@@ -296,7 +299,15 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         openOnStartChoice.setText(getString(R.string.open_on_start_state, openOnStartLabel()));
+        NasPhotos nas = NasPhotos.load(this);
+        nasPhotosChoice.setText(getString(R.string.nas_photos_state, getString(nas.active() ? R.string.on : R.string.off)));
         followThemeChoice.setSelected(!hasOnTvChoices());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refresh();
     }
 
     private boolean hasOnTvChoices() {

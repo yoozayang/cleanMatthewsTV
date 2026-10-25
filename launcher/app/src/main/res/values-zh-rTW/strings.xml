@@ -91,4 +91,30 @@
         <item quantity="other">%1$d 個應用程式</item>
     </plurals>
     <string name="greeting_with_name">%1$s，%2$s</string>
+    <string name="nas_photos">NAS 相片</string>
+    <string name="nas_photos_state">NAS 相片：%1$s</string>
+    <string name="nas_enabled_state">相框：%1$s</string>
+    <string name="nas_interval_label">切換間隔</string>
+    <string name="nas_seconds">%1$d 秒</string>
+    <string name="nas_minutes">%1$d 分</string>
+    <string name="nas_folders_label">資料夾</string>
+    <string name="nas_folders_state">資料夾：%1$s</string>
+    <string name="nas_folders_all">全部資料夾</string>
+    <string name="nas_folders_count">%1$d 個資料夾</string>
+    <string name="nas_folders_none">還沒有照片清單。請先打開相框並回到主畫面一次，再來選資料夾。</string>
+    <string name="nas_order_state">順序：%1$s</string>
+    <string name="nas_order_random">隨機</string>
+    <string name="nas_order_sequential">依序</string>
+    <string name="nas_jpeg_state">JPEG：%1$s</string>
+    <string name="nas_heic_state">HEIC：%1$s</string>
+    <string name="nas_formats_hint">RAW 檔與影片一律不顯示。</string>
+    <string name="nas_formats_one">至少要保留一種格式。</string>
+    <string name="nas_caption_state">照片下顯示資料夾名稱：%1$s</string>
+    <string name="nas_refresh">重新抓取照片清單</string>
+    <string name="nas_refresh_done">回到主畫面時會重新抓取清單。</string>
+    <string name="nas_status_unconfigured">還沒設定 NAS。請從電腦用 tools/nas-photos.sh 連線。</string>
+    <string name="nas_status_waiting">%1$s · 尚未抓取</string>
+    <string name="nas_status_ok">%1$s · 共 %2$s 張照片</string>
+    <string name="nas_status_empty">%1$s · 沒有符合資料夾與格式的照片</string>
+    <string name="nas_status_error">%1$s · 最近錯誤：%2$s</string>
 </resources>
