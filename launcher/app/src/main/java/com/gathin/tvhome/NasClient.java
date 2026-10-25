@@ -34,6 +34,16 @@ final class NasClient {
         }
     }
 
+    /**
+     * The NAS said no to this account (401, 403). Not retried: a NAS that blocks an address after a few failed
+     * logins (QNAP's network access protection) would otherwise lock the TV out for good.
+     */
+    static final class Refused extends IOException {
+        Refused(int code) {
+            super("HTTP " + code + ": the NAS refused the account");
+        }
+    }
+
     private static final int CONNECT_MS = 6_000;
     private static final int READ_MS = 20_000;
 
@@ -82,6 +92,9 @@ final class NasClient {
             if (etag != null && !etag.isEmpty()) c.setRequestProperty("If-None-Match", etag);
             int code = c.getResponseCode();
             if (code == HttpURLConnection.HTTP_NOT_MODIFIED) throw new NotModified();
+            if (code == HttpURLConnection.HTTP_UNAUTHORIZED || code == HttpURLConnection.HTTP_FORBIDDEN) {
+                throw new Refused(code);
+            }
             if (code != HttpURLConnection.HTTP_OK) throw new IOException("HTTP " + code);
             long length = c.getContentLengthLong();
             if (length > maxBytes) throw new IOException("too large: " + length);
