@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 
 import java.io.File;
@@ -27,6 +28,9 @@ final class NasPhotoFrame {
     private static final long INDEX_MAX_AGE_MS = 6 * 60 * 60 * 1000L;
     private static final long MAX_PHOTO_BYTES = 80L * 1024 * 1024;
     private static final int TRIES_PER_TURN = 3;
+    private static final String TAG = "NasPhotos";
+    /** A turn (list, download, decode) taking longer than this is given up on. */
+    private static final long STUCK_MS = 90_000L;
 
     private final Context context;
     private final PhotoFrameView view;
@@ -43,6 +47,8 @@ final class NasPhotoFrame {
     private boolean running;
     /** Bumped by every start() and stop(), so work that finishes late cannot touch a frame that moved on. */
     private int generation;
+    /** When the turn on the worker started, 0 while none is running. */
+    private volatile long busySince;
     private final Runnable tick = this::next;
 
     NasPhotoFrame(Context context, PhotoFrameView view, boolean animations) {
@@ -87,12 +93,16 @@ final class NasPhotoFrame {
         if (!settings.active() || running) return;
         running = true;
         generation++;
-        if (worker == null) worker = Executors.newSingleThreadExecutor(r -> {
+        if (worker == null) worker = newWorker();
+        main.post(tick);
+    }
+
+    private static ExecutorService newWorker() {
+        return Executors.newSingleThreadExecutor(r -> {
             Thread t = new Thread(r, "nas-photos");
             t.setPriority(Thread.MIN_PRIORITY);
             return t;
         });
-        main.post(tick);
     }
 
     void stop() {
@@ -117,7 +127,22 @@ final class NasPhotoFrame {
         int w = view.boxWidth();
         int h = view.boxHeight();
         if (w <= 0 || h <= 0) return;   // place() posts the first turn once the box is known
+        long since = busySince;
+        if (since != 0) {
+            if (SystemClock.elapsedRealtime() - since < STUCK_MS) {
+                main.postDelayed(tick, 5_000L);   // the last turn is still on its way; don't queue another
+                return;
+            }
+            // A download or decode that never returns (a NAS gone mid-transfer, a file the decoder chokes on)
+            // must not freeze the frame for good: leave that thread behind and carry on with a new one.
+            Log.w(TAG, "a photo turn is stuck; starting over");
+            worker.shutdownNow();
+            worker = newWorker();
+            busySince = 0;
+        }
         final int gen = generation;
+        final long started = SystemClock.elapsedRealtime();
+        busySince = started;
         worker.execute(() -> {
             Bitmap photo = null;
             String label = "";
@@ -133,7 +158,8 @@ final class NasPhotoFrame {
                         try {
                             photo = fetch(path, w, h);
                             label = settings.caption ? caption(path) : "";
-                        } catch (IOException | RuntimeException e) {
+                        } catch (IOException | RuntimeException | OutOfMemoryError e) {
+                            Log.w(TAG, "skipped one photo: " + e);
                             NasPhotos.setStatus(context, "photo: " + e.getMessage(), order.length);
                         }
                     }
@@ -141,12 +167,14 @@ final class NasPhotoFrame {
                     else delay = Math.max(delay, 60_000L);
                 }
             } catch (IOException | RuntimeException e) {
+                Log.w(TAG, "no photo list: " + e);
                 NasPhotos.setStatus(context, "list: " + e.getMessage(), 0);
                 delay = Math.max(delay, 120_000L);   // the NAS is asleep or unreachable: try again later
             }
             final Bitmap done = photo;
             final String text = label;
             final long wait = delay;
+            if (busySince == started) busySince = 0;   // a turn given up on must not clear its successor's
             main.post(() -> {
                 if (gen != generation || !running) return;
                 if (done != null) view.show(done, text);
@@ -195,10 +223,16 @@ final class NasPhotoFrame {
     private Bitmap fetch(String path, int boxW, int boxH) throws IOException {
         File file = new File(context.getCacheDir(), "nas_photo");
         try {
+            long t0 = SystemClock.elapsedRealtime();
             client.download(path, file, MAX_PHOTO_BYTES, null);
+            long t1 = SystemClock.elapsedRealtime();
             Bitmap decoded = decode(file, boxH);
             if (decoded == null) throw new IOException("cannot decode");
+            long t2 = SystemClock.elapsedRealtime();
             Bitmap feathered = PhotoFrameView.feather(decoded, boxW, boxH);
+            Log.d(TAG, file.length() / 1024 + " KB in " + (t1 - t0) + " ms, decoded " + decoded.getWidth() + "x"
+                    + decoded.getHeight() + " in " + (t2 - t1) + " ms, feathered in "
+                    + (SystemClock.elapsedRealtime() - t2) + " ms");
             if (feathered != decoded) decoded.recycle();
             return feathered;
         } finally {

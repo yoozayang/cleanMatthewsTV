@@ -16,15 +16,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PY=tools/venv/bin/python
 [ -x "$PY" ] || { echo "run: python3 -m venv tools/venv && tools/venv/bin/pip install -r tools/requirements.txt"; exit 1; }
-: "${TV_HOST:?set TV_HOST to the TV's IP}"
+: "${TV_HOST:?set TV_HOST to the IP address of the TV}"
 RECEIVER=com.gathin.tvhome/.NasPhotoConfig
 
 send() {
   # Every value is single-quoted for the TV's shell, so a password with spaces or quotes arrives intact.
-  local cmd="am broadcast -n $RECEIVER" q
+  local cmd="am broadcast -n $RECEIVER" q sq="'"
   while [ $# -gt 0 ]; do
-    q=$(printf '%s' "$3" | sed "s/'/'\\\\''/g")
-    cmd="$cmd $1 $2 '$q'"
+    q=${3//$sq/$sq\\$sq$sq}
+    cmd="$cmd $1 $2 $sq$q$sq"
     shift 3
   done
   "$PY" -I tools/tv.py "$cmd"
