@@ -530,6 +530,8 @@ tools/theme.sh themes/aurora                                 # push a theme; --r
 | [`tools/relay.py`](tools/relay.py) | Forwards a local port to the TV's ADB port, for assistants whose sandbox can't reach your network. Listens on this computer only. [Guide](tools/relay.md). |
 | [`tools/disable.sh`](tools/disable.sh), [`restore.sh`](tools/restore.sh) | Apply or undo a debloat list, the undo from the state recorded before the change. |
 | [`tools/recovery.py`](tools/recovery.py) | Writes the record `disable.sh` needs to undo itself, and prints the restore batch. |
+| [`tools/nas-photos.sh`](tools/nas-photos.sh) | This fork: connects the launcher's NAS photo frame to a WebDAV share, checking it first and pinning the NAS certificate. [Guide](tools/nas-photos.md). |
+| [`tools/nas-photo-index.sh`](tools/nas-photo-index.sh) | This fork, runs on the NAS: writes the frame's photo list (JPEG and HEIC, no RAW or video), for cron. |
 | [`tools/check.py`](tools/check.py) | Compares the TV with the list that was applied, for what a firmware update undid; `--fix` puts it back. |
 | [`tools/adb-closed.py`](tools/adb-closed.py) | Checks that the TV's network ADB port is closed once debugging is off: exits 0 when the TV refuses the connection, 1 while it is still open, 2 when nothing answered or the check itself could not run. No `nc` needed. |
 | [`tools/privacy.py`](tools/privacy.py) | Audits the TV for voice, ACR and telemetry candidates and prints the evidence for each; `--write` turns the findings into a list `disable.sh` and `restore.sh` already understand. |
@@ -673,6 +675,8 @@ and a wallpaper.
   - **Wallpaper**: one picture from the theme's collection (or its `wallpaper.jpg`), **None**, or **Theme
     default**. A pick holds that picture and stops the rotation until you choose Theme default, press
     Follow theme, or push the theme again.
+  - **NAS photos** (this fork): opens the NAS photo frame's own page, with its switch, how often it changes,
+    folders, formats and hidden photos ([tools/nas-photos.md](tools/nas-photos.md)).
   - **Animations** on or off, and **Advanced effects** (tile lift, icon zoom and smooth ambient-colour
     transitions; they may use more memory) once animations are on.
   - **Open on start**, only with `open_on_start_choice`: Off, or an app that opens instead of Home the first
