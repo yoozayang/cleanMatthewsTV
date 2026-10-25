@@ -138,8 +138,12 @@ public final class PhotoFrameView extends View {
             float inset = 0.06f * Math.min(current.getWidth(), current.getHeight());
             int x = box.right - current.getWidth();
             int y = box.top + (box.height() - current.getHeight()) / 2;
-            ring.set(x + inset * 2.5f, y + inset, box.right - inset, y + current.getHeight() - inset * 1.5f);
-            float r = 14 * getResources().getDisplayMetrics().density;
+            float density = getResources().getDisplayMetrics().density;
+            // The hint sits under the ring, not across its bottom edge.
+            float textTop = y + current.getHeight() - 10 * density - captionPaint.getTextSize();
+            ring.set(x + inset * 2.5f, y + inset, box.right - inset * 1.5f,
+                    Math.min(y + current.getHeight() - inset * 1.5f, textTop - 8 * density));
+            float r = 14 * density;
             canvas.drawRoundRect(ring, r, r, ringPaint);
         }
     }
@@ -178,7 +182,7 @@ public final class PhotoFrameView extends View {
         Paint erase = new Paint();
         erase.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
         int left = Math.round(w * 0.30f);
-        int right = Math.round(w * 0.12f);
+        int right = Math.round(w * 0.20f);
         int top = Math.round(h * 0.20f);
         int bottom = Math.round(h * 0.26f);
         fade(c, erase, 0, 0, left, h, 0, 0, left, 0);

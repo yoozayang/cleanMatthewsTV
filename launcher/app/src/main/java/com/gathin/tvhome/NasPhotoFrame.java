@@ -85,8 +85,7 @@ final class NasPhotoFrame {
         if (!settings.active() || bottom - top < 80) return;
         view.setBox(left, top, right, bottom);
         if (running && !view.hasPhoto()) {
-            main.removeCallbacks(tick);
-            main.post(tick);
+            schedule(0);
         }
     }
 
@@ -104,7 +103,7 @@ final class NasPhotoFrame {
         running = true;
         generation++;
         if (worker == null) worker = newWorker();
-        main.post(tick);
+        schedule(0);
     }
 
     private static ExecutorService newWorker() {
@@ -127,8 +126,7 @@ final class NasPhotoFrame {
     /** The next photo now, e.g. after the one on screen was hidden. */
     void skip() {
         skipRequested = true;
-        main.removeCallbacks(tick);
-        main.post(tick);
+        schedule(0);
     }
 
     /** "Don't show this photo" (or its whole folder): remembered for good, and the next photo comes at once. */
@@ -157,19 +155,28 @@ final class NasPhotoFrame {
         worker = null;
     }
 
+    /**
+     * The one way a turn is queued: any turn already waiting is dropped first, so start(), place(), skip(), a busy
+     * worker and a finished turn can never leave two chains of turns running side by side.
+     */
+    private void schedule(long delayMs) {
+        main.removeCallbacks(tick);
+        main.postDelayed(tick, delayMs);
+    }
+
     private void next() {
         if (!running || worker == null || refused) return;
         int w = view.boxWidth();
         int h = view.boxHeight();
         if (w <= 0 || h <= 0) return;   // place() posts the first turn once the box is known
         if (paused && !skipRequested) {
-            main.postDelayed(tick, 2_000L);
+            schedule(2_000L);
             return;
         }
         long since = busySince;
         if (since != 0) {
             if (SystemClock.elapsedRealtime() - since < STUCK_MS) {
-                main.postDelayed(tick, 5_000L);   // the last turn is still on its way; don't queue another
+                schedule(5_000L);   // the last turn is still on its way; don't queue another
                 return;
             }
             // A download or decode that never returns (a NAS gone mid-transfer, a file the decoder chokes on)
@@ -238,7 +245,7 @@ final class NasPhotoFrame {
                     view.show(done, text);
                     currentPath = donePath;
                 }
-                main.postDelayed(tick, wait);
+                schedule(wait);
             });
         });
     }
