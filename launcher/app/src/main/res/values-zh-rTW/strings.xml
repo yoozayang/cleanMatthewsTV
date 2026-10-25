@@ -130,4 +130,24 @@
     <string name="nas_hidden_restore_title">恢復顯示</string>
     <string name="nas_hidden_restore">恢復勾選的項目</string>
     <string name="nas_hidden_restore_all">全部恢復</string>
+    <string name="control_center">控制中心</string>
+    <string name="sleep_timer">睡眠定時</string>
+    <string name="sleep_left">剩 %1$d 分</string>
+    <string name="sleep_status">%1$d 分後關機</string>
+    <string name="sleep_warning">電視將在 %1$d 秒後待機</string>
+    <string name="sleep_more">再 15 分鐘</string>
+    <string name="sleep_now">立即關機</string>
+    <string name="sleep_unavailable">睡眠定時需要遙控器輔助服務（HomeKeyService），目前沒有開啟。</string>
+    <string name="sleep_unavailable_short">需要遙控器輔助服務</string>
+    <string name="airplay">AirPlay</string>
+    <string name="airplay_off">未偵測到</string>
+    <string name="nas_photos_settings">NAS 相片設定</string>
+    <string name="wx_now">%1$d° %2$s</string>
+    <string name="wx_clear">晴</string>
+    <string name="wx_partly">晴時多雲</string>
+    <string name="wx_overcast">多雲</string>
+    <string name="wx_fog">霧</string>
+    <string name="wx_rain">雨</string>
+    <string name="wx_snow">雪</string>
+    <string name="wx_storm">雷雨</string>
 </resources>

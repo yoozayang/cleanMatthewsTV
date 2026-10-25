@@ -195,6 +195,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** This fork's NAS photo frame in the space above the dock; inert unless set up and switched on. */
     private NasPhotoFrame photoFrame;
     private PhotoFrameView photoView;
+    /** This fork's status line under the clock (weather, sleep timer, AirPlay) and its sources. */
+    private View statusLine;
+    private TextView statusWeather, statusSleep, statusAirplay;
+    private Weather weather;
+    private AirPlayStatus airPlay;
+    /** The dock's top when the photo frame was last placed, to place it again when the status line comes or goes. */
+    private float lastDockTop = -1;
     private TextView raceKicker, raceHeadline, raceSessions;
     /** config.xml show_stats, overridable by a theme. Off: the line is gone and nothing is read. */
     private boolean showStats;
@@ -380,6 +387,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (festive) updateWifiLabel();
             sky.update();
             wallpaperPlayer.update();
+            updateSleepStatus();
             handler.postDelayed(this, MINUTE_MS);
         }
     };
@@ -725,6 +733,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
             else open(systemIntent(Settings.ACTION_SETTINGS));
         });
+        findViewById(R.id.btnControl).setOnClickListener(v -> open(new Intent(this, ControlCenterActivity.class)));
+        setUpStatusLine();
         btnReorder = findViewById(R.id.btnReorder);
         btnReorder.setOnClickListener(v -> toggleReorder());
         btnReorder.setVisibility(cfg.reorderButton ? View.VISIBLE : View.GONE);
@@ -800,11 +810,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnWifi.setOnKeyListener(pillKeys);
         btnVpn.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
+        findViewById(R.id.btnControl).setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
         btnLibraryTop.setOnKeyListener(pillKeys);
         for (View button : topAppButtons) button.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            List<View> pills = new ArrayList<>(Arrays.asList(btnInputs, btnWifi, btnVpn, btnReorder, btnLibraryTop, btnSettings));
+            List<View> pills = new ArrayList<>(Arrays.asList(btnInputs, btnWifi, btnReorder, btnLibraryTop,
+                    findViewById(R.id.btnControl), btnSettings));
             pills.addAll(topAppButtons);
             for (View button : pills) {
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
@@ -990,6 +1002,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         sky.update();
         wallpaperPlayer.start();
         photoFrame.start();
+        weather.refresh();
+        airPlay.refresh();
+        updateSleepStatus();
         handler.postDelayed(minuteTick, MINUTE_MS);
         if (festive && diya != null) {
             diya.start();
@@ -1160,6 +1175,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         endReorder();   // Home or another app while reordering keeps the order so far
         wallpaperPlayer.stop();
         photoFrame.stop();
+        airPlay.stop();
         stopAmbientAnimation();
         hero.animate().cancel();
         ambient.animate().cancel();
@@ -1858,8 +1874,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * of the way across (clear of most dock names, which also sit under its widest fade) to the dock's right edge.
      */
     private void placePhotoFrame(float dockTopInRoot) {
+        lastDockTop = dockTopInRoot;
         if (!photoFrame.active()) return;
-        View header = findViewById(R.id.leftBlock);
+        View header = statusLine.getVisibility() == View.VISIBLE ? statusLine : findViewById(R.id.leftBlock);
         int[] at = new int[2];
         int[] rootAt = new int[2];
         header.getLocationInWindow(at);
@@ -1867,8 +1884,48 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int top = at[1] - rootAt[1] + header.getHeight() + Math.round(10 * density);
         int bottom = Math.round(dockTopInRoot - 16 * density);
         int width = root.getWidth();
-        photoFrame.place(Math.round(width * 0.38f), top, width - Math.round(66 * density), bottom);
+        photoFrame.place(Math.round(width * 0.32f), top, width - Math.round(66 * density), bottom);
         photoFrame.setShown(true, animations && !reducedMotion);
+    }
+
+    // ---- status line (this fork) ------------------------------------------------------------------
+
+    private void setUpStatusLine() {
+        statusLine = findViewById(R.id.statusLine);
+        statusWeather = findViewById(R.id.statusWeather);
+        statusSleep = findViewById(R.id.statusSleep);
+        statusAirplay = findViewById(R.id.statusAirplay);
+        weather = new Weather(this, now -> {
+            statusWeather.setText(getString(R.string.wx_now, now.temperature, getString(now.description())));
+            statusWeather.setCompoundDrawablesRelativeWithIntrinsicBounds(now.icon(), 0, 0, 0);
+            showStatus(statusWeather, true);
+        });
+        airPlay = new AirPlayStatus(this, (name, known) -> {
+            if (known) statusAirplay.setText(name != null ? getString(R.string.airplay) + " · " + name
+                    : getString(R.string.airplay) + " · " + getString(R.string.airplay_off));
+            statusAirplay.setAlpha(name != null ? 1f : 0.55f);
+            showStatus(statusAirplay, known);
+        });
+    }
+
+    /** The sleep timer's countdown, once a minute and on every return to Home; gone while the timer is off. */
+    private void updateSleepStatus() {
+        int left = SleepTimer.minutesLeft();
+        if (left > 0) statusSleep.setText(getString(R.string.sleep_status, left));
+        showStatus(statusSleep, left > 0);
+    }
+
+    private void showStatus(TextView part, boolean show) {
+        part.setVisibility(show ? View.VISIBLE : View.GONE);
+        boolean any = statusWeather.getVisibility() == View.VISIBLE || statusSleep.getVisibility() == View.VISIBLE
+                || statusAirplay.getVisibility() == View.VISIBLE;
+        int was = statusLine.getVisibility();
+        statusLine.setVisibility(any ? View.VISIBLE : View.GONE);
+        // The frame starts under the status line: move it once the line has its new size.
+        if (lastDockTop >= 0) statusLine.post(() -> {
+            if (heroShown) placePhotoFrame(lastDockTop);   // not while focus is down in the grid
+        });
+        else if (was != statusLine.getVisibility()) statusLine.requestLayout();
     }
 
     /** The shelf's text for this dock app: its name and, on the cinematic shelf, "Last opened" and the dots. */

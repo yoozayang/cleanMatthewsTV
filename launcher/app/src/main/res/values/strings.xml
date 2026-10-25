@@ -189,4 +189,25 @@
     <string name="nas_hidden_restore_title">Show again</string>
     <string name="nas_hidden_restore">Show ticked</string>
     <string name="nas_hidden_restore_all">Show all</string>
+    <!-- This fork: the control centre and the status line under the clock. -->
+    <string name="control_center">Control centre</string>
+    <string name="sleep_timer">Sleep timer</string>
+    <string name="sleep_left">%1$d min left</string>
+    <string name="sleep_status">Off in %1$d min</string>
+    <string name="sleep_warning">The TV goes to standby in %1$d s</string>
+    <string name="sleep_more">15 more minutes</string>
+    <string name="sleep_now">Turn off now</string>
+    <string name="sleep_unavailable">The sleep timer needs the remote helper (HomeKeyService), which is off.</string>
+    <string name="sleep_unavailable_short">Needs the remote helper</string>
+    <string name="airplay">AirPlay</string>
+    <string name="airplay_off">Not offered</string>
+    <string name="nas_photos_settings">NAS photo settings</string>
+    <string name="wx_now">%1$d° %2$s</string>
+    <string name="wx_clear">Clear</string>
+    <string name="wx_partly">Partly cloudy</string>
+    <string name="wx_overcast">Cloudy</string>
+    <string name="wx_fog">Fog</string>
+    <string name="wx_rain">Rain</string>
+    <string name="wx_snow">Snow</string>
+    <string name="wx_storm">Thunderstorm</string>
 </resources>
