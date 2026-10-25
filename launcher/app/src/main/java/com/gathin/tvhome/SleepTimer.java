@@ -53,15 +53,21 @@ final class SleepTimer {
     }
 
     static void set(int minutes) {
+        setSeconds(minutes * 60);
+        setMinutes = Math.max(0, minutes);
+    }
+
+    /** In seconds, for SleepTimerConfig over adb (a short timer to see the warning card); 0 turns it off. */
+    static void setSeconds(int seconds) {
         main.removeCallbacksAndMessages(null);
         dismissWarning();
-        setMinutes = minutes;
-        if (minutes <= 0) {
+        setMinutes = 0;
+        if (seconds <= 0) {
             deadline = 0;
             return;
         }
-        deadline = SystemClock.elapsedRealtime() + minutes * 60_000L;
-        main.postDelayed(WARN, Math.max(0, minutes * 60_000L - WARN_MS));
+        deadline = SystemClock.elapsedRealtime() + seconds * 1000L;
+        main.postDelayed(WARN, Math.max(0, seconds * 1000L - WARN_MS));
     }
 
     /** The next choice after the current one (Off, 30, 60, 90, 120, Off ...), as the control centre's toggle. */

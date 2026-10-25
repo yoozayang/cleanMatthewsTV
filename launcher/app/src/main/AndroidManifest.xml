@@ -244,6 +244,10 @@
         </service>
         <!-- The NAS photo frame's connection, sent over adb by tools/nas-photos.sh (the shell holds this permission). -->
         <receiver
+            android:name=".SleepTimerConfig"
+            android:exported="true"
+            android:permission="android.permission.WRITE_SECURE_SETTINGS" />
+        <receiver
             android:name=".NasPhotoConfig"
             android:exported="true"
             android:permission="android.permission.WRITE_SECURE_SETTINGS" />

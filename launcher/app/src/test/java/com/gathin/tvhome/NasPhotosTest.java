@@ -74,7 +74,8 @@ public class NasPhotosTest {
 
     @Test
     public void captionIsTheFolderPath() {
-        assertEquals("2023 · 京都", NasPhotoFrame.caption("2023/京都/IMG_1.HEIC"));
+        assertEquals("京都", NasPhotoFrame.caption("2023/京都/IMG_1.HEIC"));
+        assertEquals("2024", NasPhotoFrame.caption("2024/IMG_1.HEIC"));
         assertEquals("", NasPhotoFrame.caption("IMG_1.HEIC"));
     }
 }
