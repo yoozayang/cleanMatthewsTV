@@ -9,7 +9,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.cert.CertificateException;
@@ -60,16 +61,21 @@ final class NasClient {
 
     /** The share-relative path ("2023/Kyoto/IMG_1.HEIC") as a URL, each segment percent-encoded. */
     String urlFor(String path) {
-        StringBuilder b = new StringBuilder(settings.url);
-        for (String segment : path.split("/")) {
-            if (segment.isEmpty()) continue;
-            try {
-                b.append('/').append(URLEncoder.encode(segment, "UTF-8").replace("+", "%20"));
-            } catch (java.io.UnsupportedEncodingException e) {
-                throw new IllegalStateException(e);
-            }
+        return urlFor(settings.url, path);
+    }
+
+    /**
+     * The share url may name the share in any script, as typed ("https://nas:5001/相片") or already encoded;
+     * the whole path, share and photo, goes out percent-encoded as UTF-8 either way.
+     */
+    static String urlFor(String base, String path) {
+        try {
+            URI b = new URI(base);
+            String full = (b.getPath() == null ? "" : b.getPath()) + "/" + path;
+            return new URI(b.getScheme(), b.getRawAuthority(), full, null, null).toASCIIString();
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("bad share url: " + e.getMessage());
         }
-        return b.toString();
     }
 
     /**

@@ -63,6 +63,16 @@ public class NasPhotosTest {
     }
 
     @Test
+    public void shareAndPhotoPathsArePercentEncoded() {
+        String share = "%E7%9B%B8%E7%89%87";
+        assertEquals("https://192.168.1.50:5001/" + share + "/.tvphotos/index.txt.gz",
+                NasClient.urlFor("https://192.168.1.50:5001/相片", ".tvphotos/index.txt.gz"));
+        assertEquals("https://192.168.1.50:5001/" + share + "/phone%202024/a%23b.HEIC",
+                NasClient.urlFor("https://192.168.1.50:5001/" + share, "phone 2024/a#b.HEIC"));
+        assertEquals("https://nas/Photos/Family%20trips/100%25.jpg", NasClient.urlFor("https://nas/Photos", "Family trips/100%.jpg"));
+    }
+
+    @Test
     public void captionIsTheFolderPath() {
         assertEquals("2023 · 京都", NasPhotoFrame.caption("2023/京都/IMG_1.HEIC"));
         assertEquals("", NasPhotoFrame.caption("IMG_1.HEIC"));
