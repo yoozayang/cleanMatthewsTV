@@ -355,9 +355,11 @@ final class NasPhotoFrame {
         }
     }
 
-    /** The folders the photo is in, "2023 · Kyoto", as a quiet caption. */
+    /** The folder the photo is in, its own name only ("Kyoto" for "2023/Kyoto/a.jpg"), as a quiet caption. */
     static String caption(String path) {
         int slash = path.lastIndexOf('/');
-        return slash <= 0 ? "" : path.substring(0, slash).replace("/", " · ");
+        if (slash <= 0) return "";
+        String folder = path.substring(0, slash);
+        return folder.substring(folder.lastIndexOf('/') + 1);
     }
 }
