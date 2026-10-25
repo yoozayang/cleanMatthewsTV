@@ -1884,7 +1884,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int top = at[1] - rootAt[1] + header.getHeight() + Math.round(10 * density);
         int bottom = Math.round(dockTopInRoot - 34 * density);   // clear of the dock band, which rises 14dp over the tiles
         int width = root.getWidth();
-        photoFrame.place(Math.round(width * 0.32f), top, width - Math.round(66 * density), bottom);
+        if (getResources().getBoolean(R.bool.rtl_menu_bar)) {
+            photoView.setMirrored(true);   // Hebrew: the dock name is on the right, so the photo goes left
+            photoFrame.place(Math.round(66 * density), top, width - Math.round(width * 0.32f), bottom);
+        } else {
+            photoFrame.place(Math.round(width * 0.32f), top, width - Math.round(66 * density), bottom);
+        }
         photoFrame.setShown(true, animations && !reducedMotion);
     }
 

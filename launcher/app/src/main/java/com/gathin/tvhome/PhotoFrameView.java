@@ -36,6 +36,8 @@ public final class PhotoFrameView extends View {
     private float mix = 1f;
     private ValueAnimator fade;
     private boolean animate = true;
+    /** Right-to-left Home (Hebrew): photos sit against the box's left edge, the dock name being on the right. */
+    private boolean mirrored;
 
     public PhotoFrameView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -66,6 +68,19 @@ public final class PhotoFrameView extends View {
 
     void setAnimate(boolean animate) {
         this.animate = animate;
+    }
+
+    void setMirrored(boolean mirrored) {
+        this.mirrored = mirrored;
+    }
+
+    boolean mirrored() {
+        return mirrored;
+    }
+
+    /** Where a photo of this width starts, against the box's far edge from the dock name. */
+    private int photoLeft(int width) {
+        return mirrored ? box.left : box.right - width;
     }
 
     /** The space the photo may use, in this view's coordinates. Photos sit against its right edge. */
@@ -136,12 +151,13 @@ public final class PhotoFrameView extends View {
         if (current != null && isFocused()) {
             // The feathered edges fade out over about a fifth of the photo; the ring sits where it is still solid.
             float inset = 0.06f * Math.min(current.getWidth(), current.getHeight());
-            int x = box.right - current.getWidth();
+            int x = photoLeft(current.getWidth());
             int y = box.top + (box.height() - current.getHeight()) / 2;
             float density = getResources().getDisplayMetrics().density;
             // The hint sits under the ring, not across its bottom edge.
             float textTop = y + current.getHeight() - 10 * density - captionPaint.getTextSize();
-            ring.set(x + inset * 2.5f, y + inset, box.right - inset * 1.5f,
+            float wide = inset * 2.5f, narrow = inset * 1.5f;   // the wide fade faces the dock name
+            ring.set(x + (mirrored ? narrow : wide), y + inset, x + current.getWidth() - (mirrored ? wide : narrow),
                     Math.min(y + current.getHeight() - inset * 1.5f, textTop - 8 * density));
             float r = 14 * density;
             canvas.drawRoundRect(ring, r, r, ringPaint);
@@ -149,14 +165,15 @@ public final class PhotoFrameView extends View {
     }
 
     private void draw(Canvas canvas, Bitmap photo, String label, float alpha) {
-        int x = box.right - photo.getWidth();
+        int x = photoLeft(photo.getWidth());
         int y = box.top + (box.height() - photo.getHeight()) / 2;
         photoPaint.setAlpha(Math.round(255 * alpha));
         canvas.drawBitmap(photo, x, y, photoPaint);
         if (!label.isEmpty()) {
             captionPaint.setColor(Math.round(0xB3 * alpha) << 24 | 0xFFFFFF);
             float pad = 10 * getResources().getDisplayMetrics().density;
-            canvas.drawText(label, box.right - pad, y + photo.getHeight() - pad, captionPaint);
+            captionPaint.setTextAlign(mirrored ? Paint.Align.LEFT : Paint.Align.RIGHT);
+            canvas.drawText(label, mirrored ? x + pad : x + photo.getWidth() - pad, y + photo.getHeight() - pad, captionPaint);
         }
     }
 
@@ -166,6 +183,11 @@ public final class PhotoFrameView extends View {
      * dock, so the photo melts into the backdrop with no visible border.
      */
     static Bitmap feather(Bitmap src, int boxW, int boxH) {
+        return feather(src, boxW, boxH, false);
+    }
+
+    /** mirrored: the wide fade on the right instead (right-to-left Home, the dock name on the right). */
+    static Bitmap feather(Bitmap src, int boxW, int boxH, boolean mirrored) {
         float scale = (float) boxH / src.getHeight();
         int w = Math.min(boxW, Math.max(1, Math.round(src.getWidth() * scale)));
         int h = boxH;
@@ -181,8 +203,8 @@ public final class PhotoFrameView extends View {
 
         Paint erase = new Paint();
         erase.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
-        int left = Math.round(w * 0.30f);
-        int right = Math.round(w * 0.20f);
+        int left = Math.round(w * (mirrored ? 0.20f : 0.30f));
+        int right = Math.round(w * (mirrored ? 0.30f : 0.20f));
         int top = Math.round(h * 0.20f);
         int bottom = Math.round(h * 0.26f);
         fade(c, erase, 0, 0, left, h, 0, 0, left, 0);

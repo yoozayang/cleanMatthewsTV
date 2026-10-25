@@ -298,7 +298,7 @@ final class NasPhotoFrame {
             Bitmap decoded = decode(file, boxH);
             if (decoded == null) throw new IOException("cannot decode");
             long t2 = SystemClock.elapsedRealtime();
-            Bitmap feathered = PhotoFrameView.feather(decoded, boxW, boxH);
+            Bitmap feathered = PhotoFrameView.feather(decoded, boxW, boxH, view.mirrored());
             Log.d(TAG, file.length() / 1024 + " KB in " + (t1 - t0) + " ms, decoded " + decoded.getWidth() + "x"
                     + decoded.getHeight() + " in " + (t2 - t1) + " ms, feathered in "
                     + (SystemClock.elapsedRealtime() - t2) + " ms");
