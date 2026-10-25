@@ -192,6 +192,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextView stats;
     private List<RaceWeekend.Race> raceCalendar;
     private View racePanel;
+    /** This fork's NAS photo frame in the space above the dock; inert unless set up and switched on. */
+    private NasPhotoFrame photoFrame;
     private TextView raceKicker, raceHeadline, raceSessions;
     /** game_day: each team's next game from an add-on, rotating in the race panel; null when the key is off. */
     private GameDay gameDay;
@@ -526,6 +528,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         stats = findViewById(R.id.stats);
         raceCalendar = cfg.raceCalendar;
         racePanel = findViewById(R.id.racePanel);
+        photoFrame = new NasPhotoFrame(this, findViewById(R.id.photoFrame), animations && !reducedMotion);
         raceKicker = findViewById(R.id.raceKicker);
         raceHeadline = findViewById(R.id.raceHeadline);
         raceSessions = findViewById(R.id.raceSessions);
@@ -1046,6 +1049,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (gameDay != null) gameDay.start();
         sky.update();
         wallpaperPlayer.start();
+        photoFrame.start();
         handler.postDelayed(minuteTick, MINUTE_MS);
         if (festive && diya != null) {
             diya.start();
@@ -1216,6 +1220,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         root.removeCallbacks(showIdleClock);
         endReorder();   // Home or another app while reordering keeps the order so far
         wallpaperPlayer.stop();
+        photoFrame.stop();
         stopAmbientAnimation();
         hero.animate().cancel();
         ambient.animate().cancel();
@@ -1263,6 +1268,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         heroArtCache.clear();
         heroArtKey = null;
         wallpaperPlayer.releaseForMemoryPressure();
+        photoFrame.release();
         tileRefresh.invalidate();
     }
 
@@ -1282,6 +1288,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (gameDay != null) gameDay.shutdown();
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
+        photoFrame.close();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         TvInputManager tim = (TvInputManager) getSystemService(TV_INPUT_SERVICE);
         if (tim != null) tim.unregisterCallback(inputCallback);
@@ -1795,6 +1802,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         float y = dockTopInRoot - 14 * density - 26 * density - hero.getHeight();
         boolean changed = !label.contentEquals(heroName.getText());
         if (cinematic && heroArtAlpha > 0f) showHeroArt(position);
+        placePhotoFrame(dockTopInRoot);
 
         if (!animations || reducedMotion) {
             // Snap the shelf instead of sliding and fading it: each of those frames repaints the
@@ -1851,6 +1859,24 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 ambient.animate().alpha(1f).setDuration(600).start();
             }
         }
+    }
+
+    /**
+     * The NAS photo frame's box: from just under the clock row to just above the dock, from a little over a third
+     * of the way across (clear of most dock names, which also sit under its widest fade) to the dock's right edge.
+     */
+    private void placePhotoFrame(float dockTopInRoot) {
+        if (!photoFrame.active()) return;
+        View header = findViewById(R.id.leftBlock);
+        int[] at = new int[2];
+        int[] rootAt = new int[2];
+        header.getLocationInWindow(at);
+        root.getLocationInWindow(rootAt);
+        int top = at[1] - rootAt[1] + header.getHeight() + Math.round(10 * density);
+        int bottom = Math.round(dockTopInRoot - 16 * density);
+        int width = root.getWidth();
+        photoFrame.place(Math.round(width * 0.38f), top, width - Math.round(66 * density), bottom);
+        photoFrame.setShown(true, animations && !reducedMotion);
     }
 
     /** The shelf's text for this dock app: its name and, on the cinematic shelf, "Last opened" and the dots. */
@@ -2074,6 +2100,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         heroArt.animate().cancel();
         heroArt.setAlpha(0f);
         heroShown = false;
+        photoFrame.setShown(false, animations && !reducedMotion);
         if (!ambientGlow) return;
         if (!animations || reducedMotion) {
             setAmbient(color);
@@ -2092,6 +2119,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private void hideHero() {
+        photoFrame.setShown(false, animations && !reducedMotion);
         if (!heroShown) return;
         stopAmbientAnimation();
         hero.animate().cancel();

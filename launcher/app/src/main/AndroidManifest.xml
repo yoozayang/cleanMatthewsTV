@@ -8,6 +8,9 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- This fork only: the NAS photo frame (NasPhotoFrame) fetches photos from the NAS share set up with
+         tools/nas-photos.sh, and nothing else. The upstream launcher has no network access by design. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Needed since Android 10 to read the Wi-Fi network name for the network pill. Never requested at
          runtime: build-and-install grants it with pm grant, so lint's Android 12 "ask for COARSE with
@@ -101,6 +104,11 @@
 
         <activity
             android:name=".LauncherSettingsActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".NasPhotoSettingsActivity"
             android:exported="false"
             android:excludeFromRecents="true"
             android:screenOrientation="landscape" />
@@ -224,6 +232,11 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+        <!-- The NAS photo frame's connection, sent over adb by tools/nas-photos.sh (the shell holds this permission). -->
+        <receiver
+            android:name=".NasPhotoConfig"
+            android:exported="true"
+            android:permission="android.permission.WRITE_SECURE_SETTINGS" />
         <receiver
             android:name=".GuardConfig"
             android:exported="true"
