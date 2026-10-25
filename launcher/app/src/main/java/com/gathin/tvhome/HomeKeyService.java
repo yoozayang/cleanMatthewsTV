@@ -127,6 +127,21 @@ public class HomeKeyService extends AccessibilityService {
         unlockReceiver = null;
     }
 
+    /**
+     * The sleep timer's way to standby (SleepTimer): an ordinary app has no permission to sleep the TV, but this
+     * helper's lock-screen action does exactly that since Android 9. False when the helper is not bound.
+     */
+    static boolean sleepNow() {
+        HomeKeyService service = running;
+        return service != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                && service.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+    }
+
+    /** The bound helper, for the sleep timer's warning over whatever app is on screen; null when not bound. */
+    static Context overlayContext() {
+        return running;
+    }
+
     /** The opt-in broadcast: arm this binding now, or drop the receiver if the opt-in was turned off. */
     static void applyStandbyOptIn() {
         HomeKeyService service = running;

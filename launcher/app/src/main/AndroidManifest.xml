@@ -9,7 +9,9 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- This fork only: the NAS photo frame (NasPhotoFrame) fetches photos from the NAS share set up with
-         tools/nas-photos.sh, and nothing else. The upstream launcher has no network access by design. -->
+         tools/nas-photos.sh, the status line asks Open-Meteo for the weather (Weather, the TV's location rounded to
+         about a kilometre) and looks for AirPlay on the local network (AirPlayStatus). Nothing else. The upstream
+         launcher has no network access by design. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Needed since Android 10 to read the Wi-Fi network name for the network pill. Never requested at
@@ -134,6 +136,14 @@
              which throws IllegalStateException in onCreate (#1122); a TV is landscape anyway. -->
         <activity
             android:name=".QuickSettingsActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:launchMode="singleTop"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
+        <activity
+            android:name=".ControlCenterActivity"
             android:exported="false"
             android:taskAffinity=""
             android:launchMode="singleTop"
