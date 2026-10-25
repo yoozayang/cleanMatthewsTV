@@ -194,6 +194,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private View racePanel;
     /** This fork's NAS photo frame in the space above the dock; inert unless set up and switched on. */
     private NasPhotoFrame photoFrame;
+    private PhotoFrameView photoView;
     private TextView raceKicker, raceHeadline, raceSessions;
     /** config.xml show_stats, overridable by a theme. Off: the line is gone and nothing is read. */
     private boolean showStats;
@@ -490,7 +491,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         stats = findViewById(R.id.stats);
         raceCalendar = cfg.raceCalendar;
         racePanel = findViewById(R.id.racePanel);
-        photoFrame = new NasPhotoFrame(this, findViewById(R.id.photoFrame), animations && !reducedMotion);
+        photoView = findViewById(R.id.photoFrame);
+        photoFrame = new NasPhotoFrame(this, photoView, animations && !reducedMotion);
+        setUpPhotoFrameFocus();
         raceKicker = findViewById(R.id.raceKicker);
         raceHeadline = findViewById(R.id.raceHeadline);
         raceSessions = findViewById(R.id.raceSessions);
@@ -782,6 +785,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return true;
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                if (focusPhotoFrame()) return true;
                 // Back to the dock tile Up came from, not wherever the focus finder lands.
                 focusTile(singleRow ? lastFocused : lastFocused % COLUMNS);
                 return true;
@@ -1784,6 +1788,72 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /**
+     * The NAS photo frame takes focus between the dock and the top bar while a photo is up: Up and Down move on,
+     * Left and Right stay, OK opens its menu, and the photo holds still while it is focused.
+     */
+    private void setUpPhotoFrameFocus() {
+        photoView.setFocusHint(getString(R.string.nas_photo_hint));
+        photoView.setOnFocusChangeListener((v, has) -> {
+            photoFrame.setPaused(has);
+            if (has) hideGlass();
+        });
+        photoView.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_DPAD_UP:
+                    View top = btnInputs.getVisibility() == View.VISIBLE ? btnInputs : firstTopButton();
+                    top.requestFocus();
+                    return true;
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                    focusTile(singleRow ? lastFocused : lastFocused % COLUMNS);
+                    return true;
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                    return true;
+                default:
+                    return false;
+            }
+        });
+        photoView.setOnClickListener(v -> showPhotoMenu());
+    }
+
+    /** Focus to the photo frame when it shows a photo; false leaves the key to the caller's own path. */
+    private boolean focusPhotoFrame() {
+        if (!photoFrame.active() || !photoView.isFocusable() || photoView.getAlpha() < 0.5f
+                || photoFrame.currentPath() == null) return false;
+        photoView.requestFocus();
+        photoView.playSoundEffect(SoundEffectConstants.NAVIGATION_UP);
+        return true;
+    }
+
+    /** OK on the photo: hide it for good, hide its folder, or go on to the next one. */
+    private void showPhotoMenu() {
+        String path = photoFrame.currentPath();
+        if (path == null) return;
+        String name = path.substring(path.lastIndexOf('/') + 1);
+        String folder = NasHidden.folderOf(path);
+        List<String> labels = new ArrayList<>();
+        labels.add(getString(R.string.nas_hide_photo));
+        if (!folder.isEmpty()) labels.add(getString(R.string.nas_hide_folder, NasPhotoFrame.caption(path)));
+        labels.add(getString(R.string.nas_next_photo));
+        new android.app.AlertDialog.Builder(this)
+                .setTitle(name)
+                .setItems(labels.toArray(new String[0]), (d, which) -> {
+                    String picked = labels.get(which);
+                    if (picked.equals(getString(R.string.nas_next_photo))) {
+                        photoFrame.skip();
+                        return;
+                    }
+                    boolean wholeFolder = !picked.equals(getString(R.string.nas_hide_photo));
+                    photoFrame.hideCurrent(wholeFolder);
+                    Toast.makeText(this, wholeFolder ? R.string.nas_hidden_folder_done : R.string.nas_hidden_photo_done,
+                            Toast.LENGTH_LONG).show();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    /**
      * The NAS photo frame's box: from just under the clock row to just above the dock, from a little over a third
      * of the way across (clear of most dock names, which also sit under its widest fade) to the dock's right edge.
      */
@@ -2265,7 +2335,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (singleRow) {
             // One row: Up leaves for the top bar, Down has nowhere to go, and Left/Right walk the whole row,
             // stopping at its two ends (the default focus search scrolls the row to the next tile).
-            if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return false;
+            if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return focusPhotoFrame();
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) return true;
             boolean forward = rtlAppGrid ? keyCode == KeyEvent.KEYCODE_DPAD_LEFT : keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
             int last = adapter.focusablePosition(count - 1);
@@ -2289,7 +2359,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     rtlAppGrid, keyCode == KeyEvent.KEYCODE_DPAD_LEFT);
         }
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-            if (position < COLUMNS) return false;          // dock row: let focus move to the top bar
+            if (position < COLUMNS) return focusPhotoFrame();   // dock row: the photo, else the top bar
             target = position - COLUMNS;
         } else {
             int lastRowStart = ((count - 1) / COLUMNS) * COLUMNS;

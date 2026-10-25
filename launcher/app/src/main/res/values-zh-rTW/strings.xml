@@ -117,4 +117,17 @@
     <string name="nas_status_ok">%1$s · 共 %2$s 張照片</string>
     <string name="nas_status_empty">%1$s · 沒有符合資料夾與格式的照片</string>
     <string name="nas_status_error">%1$s · 最近錯誤：%2$s</string>
+    <string name="nas_photo_hint">按 OK 管理這張照片</string>
+    <string name="nas_hide_photo">不再顯示這張照片</string>
+    <string name="nas_hide_folder">不再顯示「%1$s」的照片</string>
+    <string name="nas_next_photo">下一張</string>
+    <string name="nas_hidden_photo_done">已隱藏。可在「桌面設定 › NAS 相片」恢復。</string>
+    <string name="nas_hidden_folder_done">已隱藏這個資料夾。可在「桌面設定 › NAS 相片」恢復。</string>
+    <string name="nas_hidden_state">已隱藏的照片與資料夾：%1$d</string>
+    <string name="nas_hidden_hint">在主畫面從下方那排按「上」選到照片，再按 OK 即可隱藏。</string>
+    <string name="nas_hidden_none">目前沒有隱藏任何照片。</string>
+    <string name="nas_hidden_folder_item">資料夾：%1$s</string>
+    <string name="nas_hidden_restore_title">恢復顯示</string>
+    <string name="nas_hidden_restore">恢復勾選的項目</string>
+    <string name="nas_hidden_restore_all">全部恢復</string>
 </resources>

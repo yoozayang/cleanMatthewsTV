@@ -29,6 +29,7 @@ public final class NasPhotoSettingsActivity extends Activity {
     private TextView jpeg;
     private TextView heic;
     private TextView caption;
+    private TextView hidden;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -57,6 +58,8 @@ public final class NasPhotoSettingsActivity extends Activity {
         heic.setOnClickListener(v -> toggleFormat(NasPhotos.KEY_HEIC, NasPhotos.KEY_JPEG));
         caption = findViewById(R.id.nasCaption);
         caption.setOnClickListener(v -> toggle(NasPhotos.KEY_CAPTION, true));
+        hidden = findViewById(R.id.nasHidden);
+        hidden.setOnClickListener(v -> showHidden());
         findViewById(R.id.nasRefresh).setOnClickListener(v -> {
             // Forget the cached list's ETag, and Home fetches the whole list again when it next resumes.
             prefs.edit().remove("index_etag").apply();
@@ -127,6 +130,38 @@ public final class NasPhotoSettingsActivity extends Activity {
                 .show();
     }
 
+    /** The photos and folders hidden from the frame; ticked ones are shown again. */
+    private void showHidden() {
+        NasHidden list = NasHidden.get(this);
+        List<String> entries = list.list();
+        if (entries.isEmpty()) {
+            Toast.makeText(this, R.string.nas_hidden_none, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] labels = new String[entries.size()];
+        for (int i = 0; i < labels.length; i++) {
+            String e = entries.get(i);
+            labels[i] = e.endsWith("/") ? getString(R.string.nas_hidden_folder_item, e.substring(0, e.length() - 1)) : e;
+        }
+        List<String> picked = new ArrayList<>();
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.nas_hidden_restore_title)
+                .setMultiChoiceItems(labels, new boolean[labels.length], (d, which, isChecked) -> {
+                    if (isChecked) picked.add(entries.get(which));
+                    else picked.remove(entries.get(which));
+                })
+                .setPositiveButton(R.string.nas_hidden_restore, (d, w) -> {
+                    list.restore(picked);
+                    changed();
+                })
+                .setNeutralButton(R.string.nas_hidden_restore_all, (d, w) -> {
+                    list.restoreAll();
+                    changed();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
     /** Saved; Home rebuilds with it when it next resumes, however these settings are left. */
     private void changed() {
         NasPhotos.bumpRevision(this);
@@ -149,6 +184,7 @@ public final class NasPhotoSettingsActivity extends Activity {
         jpeg.setText(getString(R.string.nas_jpeg_state, onOff(s.jpeg)));
         heic.setText(getString(R.string.nas_heic_state, onOff(s.heic)));
         caption.setText(getString(R.string.nas_caption_state, onOff(s.caption)));
+        hidden.setText(getString(R.string.nas_hidden_state, NasHidden.get(this).size()));
     }
 
     private String statusText(NasPhotos s) {

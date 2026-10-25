@@ -176,4 +176,17 @@
     <string name="nas_status_ok">%1$s · %2$s photos</string>
     <string name="nas_status_empty">%1$s · no photos match these folders and formats</string>
     <string name="nas_status_error">%1$s · last error: %2$s</string>
+    <string name="nas_photo_hint">OK: options for this photo</string>
+    <string name="nas_hide_photo">Don\'t show this photo again</string>
+    <string name="nas_hide_folder">Don\'t show photos from %1$s</string>
+    <string name="nas_next_photo">Next photo</string>
+    <string name="nas_hidden_photo_done">Hidden. Bring it back in Launcher settings › NAS photos.</string>
+    <string name="nas_hidden_folder_done">Folder hidden. Bring it back in Launcher settings › NAS photos.</string>
+    <string name="nas_hidden_state">Hidden photos and folders: %1$d</string>
+    <string name="nas_hidden_hint">Select a photo on Home (Up from the dock) and press OK to hide it.</string>
+    <string name="nas_hidden_none">Nothing is hidden.</string>
+    <string name="nas_hidden_folder_item">Folder: %1$s</string>
+    <string name="nas_hidden_restore_title">Show again</string>
+    <string name="nas_hidden_restore">Show ticked</string>
+    <string name="nas_hidden_restore_all">Show all</string>
 </resources>

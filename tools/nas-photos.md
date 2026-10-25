@@ -42,7 +42,14 @@ Launcher settings → **NAS photos**:
 | Order | Random (each photo once before any repeats) / In order |
 | JPEG, HEIC | Either can be turned off, not both |
 | Folder name under the photo | On / Off |
+| Hidden photos and folders | Tick any to show them again, or show all |
 | Fetch the photo list again | Forgets the cached list |
+
+**Hide a photo:** on Home, press Up from the dock to select the photo (a ring shows and it stops changing),
+then OK: **Don't show this photo again**, **Don't show photos from <folder>** or **Next photo**. Up again
+goes on to the top bar. The hidden list lives on the TV (`files/nas_hidden.txt`, one path per line, folders
+end in `/`), so it lasts through new photo lists and launcher updates; only clearing the launcher's data
+forgets it.
 
 The frame hides while focus is down in the grid (the tiles scroll into its space) and comes back with the
 dock. With the NAS asleep or unreachable it keeps the last list and retries every two minutes.
