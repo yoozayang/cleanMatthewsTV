@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
@@ -25,6 +26,9 @@ public final class PhotoFrameView extends View {
     private final Rect box = new Rect();
     private final Paint photoPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
     private final Paint captionPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF ring = new RectF();
+    private String focusHint = "";
     private Bitmap current;
     private Bitmap previous;
     private String caption = "";
@@ -40,7 +44,24 @@ public final class PhotoFrameView extends View {
         captionPaint.setTextAlign(Paint.Align.RIGHT);
         captionPaint.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         captionPaint.setShadowLayer(4 * density, 0, density, 0x99000000);
+        ringPaint.setStyle(Paint.Style.STROKE);
+        ringPaint.setStrokeWidth(2.5f * density);
+        ringPaint.setColor(0xD9FFFFFF);
+        ringPaint.setShadowLayer(10 * density, 0, 0, 0x66FFFFFF);
         setWillNotDraw(false);
+        // Reached with Up from the dock (MainActivity), only while a photo is on screen.
+        setFocusable(false);
+    }
+
+    /** Shown in place of the folder name while the frame has focus, e.g. "OK: options". */
+    void setFocusHint(String hint) {
+        focusHint = hint == null ? "" : hint;
+    }
+
+    @Override
+    protected void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+        invalidate();
     }
 
     void setAnimate(boolean animate) {
@@ -69,6 +90,7 @@ public final class PhotoFrameView extends View {
         previousCaption = caption;
         current = photo;
         caption = label == null ? "" : label;
+        setFocusable(true);
         if (!animate || previous == null) {
             previous = null;
             mix = 1f;
@@ -97,6 +119,7 @@ public final class PhotoFrameView extends View {
         current = null;
         previous = null;
         caption = "";
+        setFocusable(false);
         invalidate();
     }
 
@@ -108,7 +131,17 @@ public final class PhotoFrameView extends View {
     protected void onDraw(Canvas canvas) {
         if (box.isEmpty()) return;
         if (previous != null && mix < 1f) draw(canvas, previous, previousCaption, 1f - mix);
-        if (current != null) draw(canvas, current, caption, previous != null ? mix : 1f);
+        if (current != null) draw(canvas, current, isFocused() && !focusHint.isEmpty() ? focusHint : caption,
+                previous != null ? mix : 1f);
+        if (current != null && isFocused()) {
+            // The feathered edges fade out over about a fifth of the photo; the ring sits where it is still solid.
+            float inset = 0.06f * Math.min(current.getWidth(), current.getHeight());
+            int x = box.right - current.getWidth();
+            int y = box.top + (box.height() - current.getHeight()) / 2;
+            ring.set(x + inset * 2.5f, y + inset, box.right - inset, y + current.getHeight() - inset * 1.5f);
+            float r = 14 * getResources().getDisplayMetrics().density;
+            canvas.drawRoundRect(ring, r, r, ringPaint);
+        }
     }
 
     private void draw(Canvas canvas, Bitmap photo, String label, float alpha) {

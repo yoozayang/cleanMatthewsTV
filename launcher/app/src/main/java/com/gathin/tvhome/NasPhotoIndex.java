@@ -73,8 +73,9 @@ final class NasPhotoIndex {
     static NasPhotoIndex load(Context context, NasPhotos settings) throws IOException {
         NasPhotoIndex index = new NasPhotoIndex(cacheFile(context));
         if (!index.file.isFile()) return index;
+        NasHidden hidden = NasHidden.get(context);
         index.scan((offset, path) -> {
-            if (settings.wantsType(path) && settings.wantsFolder(path)) index.add(offset);
+            if (settings.wantsType(path) && settings.wantsFolder(path) && !hidden.hides(path)) index.add(offset);
         });
         index.offsets = Arrays.copyOf(index.offsets, index.count);
         return index;

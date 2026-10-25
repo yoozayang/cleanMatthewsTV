@@ -49,6 +49,14 @@ final class NasPhotoFrame {
     private int generation;
     /** When the turn on the worker started, 0 while none is running. */
     private volatile long busySince;
+    /** The photo on screen, for the frame's menu; null until the first one arrives. */
+    private String currentPath;
+    /** True while the frame has focus: the photo the owner is looking at stays put. */
+    private boolean paused;
+    /** skip() asked for the next photo: it comes even while the frame is focused and paused. */
+    private boolean skipRequested;
+    /** Photos skipped as hidden in one turn before the turn gives up (a list that is almost all hidden). */
+    private static final int MAX_HIDDEN_SKIPS = 500;
     private final Runnable tick = this::next;
 
     NasPhotoFrame(Context context, PhotoFrameView view, boolean animations) {
@@ -105,6 +113,31 @@ final class NasPhotoFrame {
         });
     }
 
+    String currentPath() {
+        return currentPath;
+    }
+
+    /** Held while the frame has focus, so the photo does not change under the owner's eyes. */
+    void setPaused(boolean paused) {
+        this.paused = paused;
+    }
+
+    /** The next photo now, e.g. after the one on screen was hidden. */
+    void skip() {
+        skipRequested = true;
+        main.removeCallbacks(tick);
+        main.post(tick);
+    }
+
+    /** "Don't show this photo" (or its whole folder): remembered for good, and the next photo comes at once. */
+    void hideCurrent(boolean wholeFolder) {
+        if (currentPath == null) return;
+        NasHidden hidden = NasHidden.get(context);
+        if (wholeFolder) hidden.hideFolder(currentPath);
+        else hidden.hidePhoto(currentPath);
+        skip();
+    }
+
     void stop() {
         running = false;
         generation++;
@@ -127,6 +160,10 @@ final class NasPhotoFrame {
         int w = view.boxWidth();
         int h = view.boxHeight();
         if (w <= 0 || h <= 0) return;   // place() posts the first turn once the box is known
+        if (paused && !skipRequested) {
+            main.postDelayed(tick, 2_000L);
+            return;
+        }
         long since = busySince;
         if (since != 0) {
             if (SystemClock.elapsedRealtime() - since < STUCK_MS) {
@@ -140,12 +177,14 @@ final class NasPhotoFrame {
             worker = newWorker();
             busySince = 0;
         }
+        skipRequested = false;
         final int gen = generation;
         final long started = SystemClock.elapsedRealtime();
         busySince = started;
         worker.execute(() -> {
             Bitmap photo = null;
             String label = "";
+            String shownPath = null;
             long delay = settings.intervalSeconds * 1000L;
             try {
                 ensureIndex();
@@ -153,11 +192,18 @@ final class NasPhotoFrame {
                     NasPhotos.setStatus(context, "empty", 0);
                     delay = Math.max(delay, 60_000L);
                 } else {
-                    for (int i = 0; i < TRIES_PER_TURN && photo == null; i++) {
+                    NasHidden hidden = NasHidden.get(context);
+                    for (int i = 0, skips = 0; i < TRIES_PER_TURN && photo == null && skips < MAX_HIDDEN_SKIPS; ) {
                         String path = index.pathAt(nextOffset());
+                        if (hidden.hides(path)) {   // hidden since the list was loaded
+                            skips++;
+                            continue;
+                        }
+                        i++;
                         try {
                             photo = fetch(path, w, h);
                             label = settings.caption ? caption(path) : "";
+                            shownPath = path;
                         } catch (IOException | RuntimeException | OutOfMemoryError e) {
                             Log.w(TAG, "skipped one photo: " + e);
                             NasPhotos.setStatus(context, "photo: " + e.getMessage(), order.length);
@@ -173,11 +219,15 @@ final class NasPhotoFrame {
             }
             final Bitmap done = photo;
             final String text = label;
+            final String donePath = shownPath;
             final long wait = delay;
             if (busySince == started) busySince = 0;   // a turn given up on must not clear its successor's
             main.post(() -> {
                 if (gen != generation || !running) return;
-                if (done != null) view.show(done, text);
+                if (done != null) {
+                    view.show(done, text);
+                    currentPath = donePath;
+                }
                 main.postDelayed(tick, wait);
             });
         });
