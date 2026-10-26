@@ -853,6 +853,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             showSettingsMenu();
             return true;
         });
+        // This fork: the control centre stands in for the Settings pill (its TV settings tile opens the same page),
+        // and holding OK on it opens the Settings pill's menu. The gear of top_menu stays, as it holds Inputs too.
+        View btnControl = findViewById(R.id.btnControl);
+        btnControl.setOnLongClickListener(v -> {
+            showSettingsMenu();
+            return true;
+        });
+        if (!cfg.topMenu) btnSettings.setVisibility(View.GONE);
 
         // Keep focus on the top bar at its ends and at the top: Android's focus finder would otherwise
         // jump to a tile far below when there is nothing in that direction.
@@ -867,8 +875,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 return true;
             }
             int firstButton = btnInputs.getVisibility() == View.VISIBLE ? R.id.btnInputs : firstTopButton().getId();
-            int leftButton = rtlMenuBar ? R.id.btnSettings : firstButton;
-            int rightButton = rtlMenuBar ? firstButton : R.id.btnSettings;
+            int endButton = settingsAnchor().getId();
+            int leftButton = rtlMenuBar ? endButton : firstButton;
+            int rightButton = rtlMenuBar ? firstButton : endButton;
             if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) return v.getId() == leftButton;
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == rightButton;
         };
@@ -1938,24 +1947,43 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         String path = photoFrame.currentPath();
         if (path == null) return;
         String name = path.substring(path.lastIndexOf('/') + 1);
-        String folder = NasHidden.folderOf(path);
+        String folderName = NasPhotoFrame.caption(path);
+        boolean inFolder = !NasPathSet.folderOf(path).isEmpty();
+        NasPathSet favorites = NasPathSet.favorites(this);
         List<String> labels = new ArrayList<>();
+        List<Runnable> actions = new ArrayList<>();
+        // Favourites first: what the owner likes is the likelier choice than what they don't.
+        boolean favPhoto = favorites.listsPhoto(path);
+        labels.add(getString(favPhoto ? R.string.nas_unfavorite_photo : R.string.nas_favorite_photo));
+        actions.add(() -> {
+            photoFrame.toggleFavorite(false);
+            Toast.makeText(this, favPhoto ? R.string.nas_unfavorite_done : R.string.nas_favorite_done, Toast.LENGTH_SHORT).show();
+        });
+        if (inFolder) {
+            boolean favFolder = favorites.listsFolderOf(path);
+            labels.add(getString(favFolder ? R.string.nas_unfavorite_folder : R.string.nas_favorite_folder, folderName));
+            actions.add(() -> {
+                photoFrame.toggleFavorite(true);
+                Toast.makeText(this, favFolder ? R.string.nas_unfavorite_done : R.string.nas_favorite_done, Toast.LENGTH_SHORT).show();
+            });
+        }
         labels.add(getString(R.string.nas_hide_photo));
-        if (!folder.isEmpty()) labels.add(getString(R.string.nas_hide_folder, NasPhotoFrame.caption(path)));
+        actions.add(() -> {
+            photoFrame.hideCurrent(false);
+            Toast.makeText(this, R.string.nas_hidden_photo_done, Toast.LENGTH_LONG).show();
+        });
+        if (inFolder) {
+            labels.add(getString(R.string.nas_hide_folder, folderName));
+            actions.add(() -> {
+                photoFrame.hideCurrent(true);
+                Toast.makeText(this, R.string.nas_hidden_folder_done, Toast.LENGTH_LONG).show();
+            });
+        }
         labels.add(getString(R.string.nas_next_photo));
+        actions.add(photoFrame::skip);
         new android.app.AlertDialog.Builder(this)
                 .setTitle(name)
-                .setItems(labels.toArray(new String[0]), (d, which) -> {
-                    String picked = labels.get(which);
-                    if (picked.equals(getString(R.string.nas_next_photo))) {
-                        photoFrame.skip();
-                        return;
-                    }
-                    boolean wholeFolder = !picked.equals(getString(R.string.nas_hide_photo));
-                    photoFrame.hideCurrent(wholeFolder);
-                    Toast.makeText(this, wholeFolder ? R.string.nas_hidden_folder_done : R.string.nas_hidden_photo_done,
-                            Toast.LENGTH_LONG).show();
-                })
+                .setItems(labels.toArray(new String[0]), (d, which) -> actions.get(which).run())
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
@@ -2605,7 +2633,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             View button = bar.getChildAt(i);
             if (button != btnInputs && button.getVisibility() == View.VISIBLE) return button;
         }
-        return findViewById(R.id.btnSettings);
+        return settingsAnchor();
+    }
+
+    /** The top bar's end: the Settings pill, or in this fork the control centre pill that replaces it. */
+    private View settingsAnchor() {
+        View settings = findViewById(R.id.btnSettings);
+        return settings.getVisibility() == View.VISIBLE ? settings : findViewById(R.id.btnControl);
     }
 
     /** top_bar_apps buttons, in bar order. */
@@ -3658,7 +3692,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** The header opens launcher settings directly; hold OK keeps the extra home actions available. */
     private void showSettingsMenu() {
-        View anchor = findViewById(R.id.btnSettings);
+        View anchor = settingsAnchor();
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (200 * density));
@@ -3888,7 +3922,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private void showModuleCardsNow() {
-        View anchor = findViewById(R.id.btnSettings);
+        View anchor = settingsAnchor();
         View panel = getLayoutInflater().inflate(R.layout.popup_cards, root, false);
         if (getResources().getBoolean(R.bool.rtl_menu_bar))
             panel.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);

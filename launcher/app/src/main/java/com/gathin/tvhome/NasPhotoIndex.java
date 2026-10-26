@@ -28,6 +28,9 @@ final class NasPhotoIndex {
     private final File file;
     private int[] offsets = new int[0];
     private int count;
+    /** Of those, the favourites (NasPathSet.favorites) and the ones taken on this day in other years. */
+    private int[] favorites = new int[0], memories = new int[0];
+    private int favCount, memCount;
 
     private NasPhotoIndex(File file) {
         this.file = file;
@@ -73,11 +76,21 @@ final class NasPhotoIndex {
     static NasPhotoIndex load(Context context, NasPhotos settings) throws IOException {
         NasPhotoIndex index = new NasPhotoIndex(cacheFile(context));
         if (!index.file.isFile()) return index;
-        NasHidden hidden = NasHidden.get(context);
+        NasPathSet hidden = NasPathSet.hidden(context);
+        NasPathSet favorites = NasPathSet.favorites(context);
+        boolean anyFavorite = favorites.size() > 0;
+        java.time.LocalDate today = java.time.LocalDate.now();
         index.scan((offset, path) -> {
-            if (settings.wantsType(path) && settings.wantsFolder(path) && !hidden.hides(path)) index.add(offset);
+            if (!settings.wantsType(path) || !settings.wantsFolder(path) || hidden.contains(path)) return;
+            index.add(offset);
+            if (anyFavorite && favorites.contains(path)) index.favorites = index.push(index.favorites, index.favCount++, offset);
+            if (settings.memories && NasPhotos.onThisDay(path, today.getYear(), today.getMonthValue(), today.getDayOfMonth())) {
+                index.memories = index.push(index.memories, index.memCount++, offset);
+            }
         });
         index.offsets = Arrays.copyOf(index.offsets, index.count);
+        index.favorites = Arrays.copyOf(index.favorites, index.favCount);
+        index.memories = Arrays.copyOf(index.memories, index.memCount);
         return index;
     }
 
@@ -108,6 +121,20 @@ final class NasPhotoIndex {
 
     int[] offsets() {
         return offsets;
+    }
+
+    int[] favorites() {
+        return favorites;
+    }
+
+    int[] memories() {
+        return memories;
+    }
+
+    private int[] push(int[] a, int at, int value) {
+        if (at == a.length) a = Arrays.copyOf(a, Math.max(64, at * 2));
+        a[at] = value;
+        return a;
     }
 
     /** The path on the line that starts at this byte offset. */

@@ -52,14 +52,14 @@ public class NasPhotosTest {
     @Test
     public void hiddenPhotosAndFolders() {
         Set<String> hidden = new HashSet<>(java.util.Arrays.asList("2024/a.jpg", "!證件照/", "2023/京都/"));
-        assertTrue(NasHidden.hides(hidden, "2024/a.jpg"));
-        assertFalse(NasHidden.hides(hidden, "2024/b.jpg"));
-        assertTrue(NasHidden.hides(hidden, "!證件照/x.jpg"));
-        assertTrue(NasHidden.hides(hidden, "2023/京都/深處/x.heic"));
-        assertFalse(NasHidden.hides(hidden, "2023/京都旅行/x.heic"));
-        assertFalse(NasHidden.hides(Collections.emptySet(), "2024/a.jpg"));
-        assertEquals("2023/京都/", NasHidden.folderOf("2023/京都/x.heic"));
-        assertEquals("", NasHidden.folderOf("x.heic"));
+        assertTrue(NasPathSet.covers(hidden, "2024/a.jpg"));
+        assertFalse(NasPathSet.covers(hidden, "2024/b.jpg"));
+        assertTrue(NasPathSet.covers(hidden, "!證件照/x.jpg"));
+        assertTrue(NasPathSet.covers(hidden, "2023/京都/深處/x.heic"));
+        assertFalse(NasPathSet.covers(hidden, "2023/京都旅行/x.heic"));
+        assertFalse(NasPathSet.covers(Collections.emptySet(), "2024/a.jpg"));
+        assertEquals("2023/京都/", NasPathSet.folderOf("2023/京都/x.heic"));
+        assertEquals("", NasPathSet.folderOf("x.heic"));
     }
 
     @Test
@@ -70,6 +70,24 @@ public class NasPhotosTest {
         assertEquals("https://192.168.1.50:5001/" + share + "/phone%202024/a%23b.HEIC",
                 NasClient.urlFor("https://192.168.1.50:5001/" + share, "phone 2024/a#b.HEIC"));
         assertEquals("https://nas/Photos/Family%20trips/100%25.jpg", NasClient.urlFor("https://nas/Photos", "Family trips/100%.jpg"));
+    }
+
+    @Test
+    public void theDateComesFromTheNameOrTheNearestFolder() {
+        org.junit.Assert.assertArrayEquals(new int[]{2024, 4, 28}, NasPhotos.dateOf("2024/IMG_20240428_171025.jpg"));
+        org.junit.Assert.assertArrayEquals(new int[]{2024, 3, 5}, NasPhotos.dateOf("phone 2024/2024-03-05 19.53.43.jpg"));
+        org.junit.Assert.assertArrayEquals(new int[]{2010, 10, 3}, NasPhotos.dateOf("Sync/2010/20101003 dinner/DSC03333.JPG"));
+        assertEquals(null, NasPhotos.dateOf("Sync/2010/dinner/DSC03333.JPG"));
+        assertEquals(null, NasPhotos.dateOf("a/120240428.jpg"));   // part of a longer number
+        assertEquals(null, NasPhotos.dateOf("a/IMG_20241332.jpg"));   // no month 13
+    }
+
+    @Test
+    public void onThisDayIsAnEarlierYearOnTodaysDate() {
+        assertTrue(NasPhotos.onThisDay("2018/IMG_20181026_090000.jpg", 2026, 10, 26));
+        assertFalse(NasPhotos.onThisDay("2026/IMG_20261026_090000.jpg", 2026, 10, 26));   // today itself
+        assertFalse(NasPhotos.onThisDay("2018/IMG_20181025_090000.jpg", 2026, 10, 26));
+        assertTrue(NasPhotos.onThisDay("Sync/20121026 trip/DSC1.JPG", 2026, 10, 26));
     }
 
     @Test

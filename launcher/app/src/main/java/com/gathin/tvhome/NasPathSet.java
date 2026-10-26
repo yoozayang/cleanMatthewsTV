@@ -12,24 +12,26 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Photos and folders the owner chose not to see again ("Don't show this photo" on the frame). Kept on the TV
- * in the app's files (not the cache, so it lasts), one share-relative path per line; a line ending in "/" is a
- * folder and hides everything under it. Survives a new photo list, a launcher update and a NAS change.
+ * A list of NAS photos and folders kept on the TV: the ones the owner hid ("Don't show this photo") and the ones
+ * they want to see more often ("Show this photo more"). In the app's files (not the cache, so it lasts), one
+ * share-relative path per line; a line ending in "/" is a folder and covers everything under it. Survives a new
+ * photo list, a launcher update and a NAS change.
  */
-final class NasHidden {
-    private static final String FILE = "nas_hidden.txt";
-    private static NasHidden instance;
+final class NasPathSet {
+    private static NasPathSet hidden;
+    private static NasPathSet favorites;
 
     private final File file;
     private final TreeSet<String> entries = new TreeSet<>();
 
-    private NasHidden(File file) {
+    private NasPathSet(File file) {
         this.file = file;
         try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(file),
                 StandardCharsets.UTF_8))) {
@@ -37,21 +39,28 @@ final class NasHidden {
                 if (!line.isEmpty()) entries.add(line);
             }
         } catch (IOException ignored) {
-            // No list yet: nothing is hidden.
+            // No list yet: it is empty.
         }
     }
 
-    static synchronized NasHidden get(Context context) {
-        if (instance == null) instance = new NasHidden(new File(context.getApplicationContext().getFilesDir(), FILE));
-        return instance;
+    /** Photos and folders the frame never shows. */
+    static synchronized NasPathSet hidden(Context context) {
+        if (hidden == null) hidden = new NasPathSet(new File(context.getApplicationContext().getFilesDir(), "nas_hidden.txt"));
+        return hidden;
     }
 
-    synchronized boolean hides(String path) {
-        return hides(entries, path);
+    /** Photos and folders the frame shows more often (NasPhotos.favoriteRate, with a cool-down per photo). */
+    static synchronized NasPathSet favorites(Context context) {
+        if (favorites == null) favorites = new NasPathSet(new File(context.getApplicationContext().getFilesDir(), "nas_favorites.txt"));
+        return favorites;
     }
 
-    /** A path is hidden when it is listed itself, or a folder above it is ("2023/Kyoto/"). */
-    static boolean hides(Set<String> entries, String path) {
+    synchronized boolean contains(String path) {
+        return covers(entries, path);
+    }
+
+    /** A path is covered when it is listed itself, or a folder above it is ("2023/Kyoto/"). */
+    static boolean covers(Set<String> entries, String path) {
         if (entries.isEmpty()) return false;
         if (entries.contains(path)) return true;
         for (int slash = path.indexOf('/'); slash > 0; slash = path.indexOf('/', slash + 1)) {
@@ -60,20 +69,38 @@ final class NasHidden {
         return false;
     }
 
-    synchronized void hidePhoto(String path) {
+    /** Listed by its own path (not only through a folder). */
+    synchronized boolean listsPhoto(String path) {
+        return entries.contains(path);
+    }
+
+    synchronized boolean listsFolderOf(String path) {
+        String folder = folderOf(path);
+        return !folder.isEmpty() && entries.contains(folder);
+    }
+
+    synchronized void addPhoto(String path) {
         if (entries.add(path)) save();
     }
 
-    synchronized void hideFolder(String photoPath) {
+    synchronized void addFolderOf(String photoPath) {
         String folder = folderOf(photoPath);
         if (!folder.isEmpty() && entries.add(folder)) save();
     }
 
-    synchronized void restore(List<String> paths) {
+    synchronized void removePhoto(String path) {
+        if (entries.remove(path)) save();
+    }
+
+    synchronized void removeFolderOf(String photoPath) {
+        if (entries.remove(folderOf(photoPath))) save();
+    }
+
+    synchronized void remove(Collection<String> paths) {
         if (entries.removeAll(paths)) save();
     }
 
-    synchronized void restoreAll() {
+    synchronized void clear() {
         if (entries.isEmpty()) return;
         entries.clear();
         save();

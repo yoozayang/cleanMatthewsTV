@@ -30,6 +30,10 @@ public final class NasPhotoSettingsActivity extends Activity {
     private TextView heic;
     private TextView caption;
     private TextView hidden;
+    private TextView favorites;
+    private TextView memories;
+    private static final int[] FAV_IDS = {R.id.nasFavRate0, R.id.nasFavRate1, R.id.nasFavRate2, R.id.nasFavRate3};
+    private final TextView[] favRates = new TextView[FAV_IDS.length];
 
     @Override
     protected void onCreate(Bundle state) {
@@ -59,7 +63,19 @@ public final class NasPhotoSettingsActivity extends Activity {
         caption = findViewById(R.id.nasCaption);
         caption.setOnClickListener(v -> toggle(NasPhotos.KEY_CAPTION, true));
         hidden = findViewById(R.id.nasHidden);
-        hidden.setOnClickListener(v -> showHidden());
+        hidden.setOnClickListener(v -> showList(NasPathSet.hidden(this), R.string.nas_hidden_none));
+        favorites = findViewById(R.id.nasFavorites);
+        favorites.setOnClickListener(v -> showList(NasPathSet.favorites(this), R.string.nas_favorites_none));
+        memories = findViewById(R.id.nasMemories);
+        memories.setOnClickListener(v -> toggle(NasPhotos.KEY_MEMORIES, true));
+        for (int i = 0; i < FAV_IDS.length; i++) {
+            final int rate = NasPhotos.FAV_RATES[i];
+            favRates[i] = findViewById(FAV_IDS[i]);
+            favRates[i].setOnClickListener(v -> {
+                prefs.edit().putInt(NasPhotos.KEY_FAV_RATE, rate).apply();
+                changed();
+            });
+        }
         findViewById(R.id.nasRefresh).setOnClickListener(v -> {
             // Forget the cached list's ETag, and Home fetches the whole list again when it next resumes.
             prefs.edit().remove("index_etag").apply();
@@ -130,12 +146,11 @@ public final class NasPhotoSettingsActivity extends Activity {
                 .show();
     }
 
-    /** The photos and folders hidden from the frame; ticked ones are shown again. */
-    private void showHidden() {
-        NasHidden list = NasHidden.get(this);
+    /** A list of photos and folders (hidden or favourites); ticked ones come off it. */
+    private void showList(NasPathSet list, int noneText) {
         List<String> entries = list.list();
         if (entries.isEmpty()) {
-            Toast.makeText(this, R.string.nas_hidden_none, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, noneText, Toast.LENGTH_SHORT).show();
             return;
         }
         String[] labels = new String[entries.size()];
@@ -151,11 +166,11 @@ public final class NasPhotoSettingsActivity extends Activity {
                     else picked.remove(entries.get(which));
                 })
                 .setPositiveButton(R.string.nas_hidden_restore, (d, w) -> {
-                    list.restore(picked);
+                    list.remove(picked);
                     changed();
                 })
                 .setNeutralButton(R.string.nas_hidden_restore_all, (d, w) -> {
-                    list.restoreAll();
+                    list.clear();
                     changed();
                 })
                 .setNegativeButton(android.R.string.cancel, null)
@@ -184,7 +199,10 @@ public final class NasPhotoSettingsActivity extends Activity {
         jpeg.setText(getString(R.string.nas_jpeg_state, onOff(s.jpeg)));
         heic.setText(getString(R.string.nas_heic_state, onOff(s.heic)));
         caption.setText(getString(R.string.nas_caption_state, onOff(s.caption)));
-        hidden.setText(getString(R.string.nas_hidden_state, NasHidden.get(this).size()));
+        hidden.setText(getString(R.string.nas_hidden_state, NasPathSet.hidden(this).size()));
+        favorites.setText(getString(R.string.nas_favorites_state, NasPathSet.favorites(this).size()));
+        memories.setText(getString(R.string.nas_memories_state, onOff(s.memories)));
+        for (int i = 0; i < favRates.length; i++) favRates[i].setSelected(NasPhotos.FAV_RATES[i] == s.favoriteRate);
     }
 
     private String statusText(NasPhotos s) {
