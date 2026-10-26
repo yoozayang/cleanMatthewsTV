@@ -240,4 +240,19 @@
     <string name="nas_memories_state">On this day: %1$s</string>
     <string name="nas_memories_hint">Photos taken on today\'s date in other years come round a little more often, by the date in their name or folder.</string>
     <string name="nas_memory_label">%1$d years ago today</string>
+    <string name="dream_wii_name">Video</string>
+    <string name="screensaver_channel">Screensaver</string>
+    <string name="screensaver_enabled">Screensaver on</string>
+    <string name="screensaver_on">On</string>
+    <string name="screensaver_off">Off</string>
+    <string name="screensaver_black">Black screen</string>
+    <string name="screensaver_preview">Watch now</string>
+    <string name="screensaver_pick">Pick a video</string>
+    <string name="screensaver_empty">No .mp4 videos in screensavers</string>
+    <string name="home_style_label">Home style</string>
+    <string name="home_style_apple">Apple TV</string>
+    <string name="home_style_wii">Wii</string>
+    <string name="home_style_hint">The Wii-style Home has its own page of channels; the photo frame, status line and control centre belong to the Apple TV style. Hold OK in the Wii menu for Launcher settings to switch back.</string>
+    <string name="wii_music_state">Wii menu music: %1$s</string>
+    <string name="home_style_state">Home style: %1$s</string>
 </resources>

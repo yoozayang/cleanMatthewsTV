@@ -112,6 +112,12 @@ public final class LauncherSettingsActivity extends Activity {
         nasPhotosChoice = findViewById(R.id.nasPhotosChoice);
         nasPhotosChoice.setOnClickListener(v -> open(new Intent(this, NasPhotoSettingsActivity.class)));
         findViewById(R.id.appearanceChoice).setOnClickListener(v -> open(new Intent(this, AppearanceSettingsActivity.class)));
+        TextView homeStyle = findViewById(R.id.homeStyleChoice);
+        homeStyle.setOnClickListener(v -> {
+            HomeStyle.set(this, !HomeStyle.wii(this));
+            setResult(RESULT_OK);
+            refresh();
+        });
         animationsChoice = findViewById(R.id.animationsChoice);
         animationsChoice.setOnClickListener(v -> {
             animations = !animations;
@@ -302,6 +308,8 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         openOnStartChoice.setText(getString(R.string.open_on_start_state, openOnStartLabel()));
+        ((TextView) findViewById(R.id.homeStyleChoice)).setText(getString(R.string.home_style_state,
+                getString(HomeStyle.wii(this) ? R.string.home_style_wii : R.string.home_style_apple)));
         NasPhotos nas = NasPhotos.load(this);
         nasPhotosChoice.setText(getString(R.string.nas_photos_state, getString(nas.active() ? R.string.on : R.string.off)));
         followThemeChoice.setSelected(!hasOnTvChoices());

@@ -233,4 +233,19 @@
     <string name="nas_memories_state">ביום הזה: %1$s</string>
     <string name="nas_memories_hint">תמונות שצולמו בתאריך של היום בשנים אחרות מופיעות קצת יותר, לפי התאריך בשם הקובץ או התיקייה.</string>
     <string name="nas_memory_label">לפני %1$d שנים היום</string>
+    <string name="dream_wii_name">וידאו</string>
+    <string name="screensaver_channel">שומר מסך</string>
+    <string name="screensaver_enabled">שומר המסך פועל</string>
+    <string name="screensaver_on">פועל</string>
+    <string name="screensaver_off">כבוי</string>
+    <string name="screensaver_black">מסך שחור</string>
+    <string name="screensaver_preview">לצפייה עכשיו</string>
+    <string name="screensaver_pick">בחרו סרטון</string>
+    <string name="screensaver_empty">אין סרטוני ‎.mp4 בתיקייה screensavers</string>
+    <string name="home_style_label">סגנון מסך הבית</string>
+    <string name="home_style_apple">Apple TV</string>
+    <string name="home_style_wii">Wii</string>
+    <string name="home_style_hint">מסך הבית בסגנון Wii הוא דף ערוצים משלו; מסגרת התמונות, שורת המצב ומרכז הבקרה שייכים לסגנון Apple TV. לחיצה ארוכה על OK בתפריט ה־Wii פותחת את הגדרות המפעיל כדי לחזור.</string>
+    <string name="wii_music_state">מוזיקת תפריט ה־Wii: %1$s</string>
+    <string name="home_style_state">סגנון מסך הבית: %1$s</string>
 </resources>

@@ -25,7 +25,37 @@ public final class AppearanceSettingsActivity extends Activity {
         int sky = Config.load(this).skyIntensity;
         row(findViewById(R.id.skyChoices), Config.SKY_CHOICE_KEY, SKY, sky);
         row(findViewById(R.id.fxChoices), Config.WEATHER_FX_KEY, FX, choices.getInt(Config.WEATHER_FX_KEY, 0));
-        ((LinearLayout) findViewById(R.id.skyChoices)).getChildAt(0).requestFocus();
+        styleRow(findViewById(R.id.styleChoices));
+        TextView music = findViewById(R.id.wiiMusicChoice);
+        music.setOnClickListener(v -> {
+            HomeStyle.setWiiMusic(this, !HomeStyle.wiiMusic(this));
+            setResult(RESULT_OK);
+            refreshMusic(music);
+        });
+        refreshMusic(music);
+        LinearLayout styles = findViewById(R.id.styleChoices);
+        styles.getChildAt(HomeStyle.wii(this) ? 1 : 0).requestFocus();
+    }
+
+    /** Apple TV or Wii: Home rebuilds in the chosen style when it next resumes. */
+    private void styleRow(LinearLayout row) {
+        int[] labels = {R.string.home_style_apple, R.string.home_style_wii};
+        for (int i = 0; i < labels.length; i++) {
+            TextView choice = (TextView) getLayoutInflater().inflate(R.layout.item_appearance_choice, row, false);
+            choice.setText(labels[i]);
+            final boolean wii = i == 1;
+            choice.setSelected(wii == HomeStyle.wii(this));
+            choice.setOnClickListener(v -> {
+                HomeStyle.set(this, wii);
+                setResult(RESULT_OK);
+                for (int j = 0; j < row.getChildCount(); j++) row.getChildAt(j).setSelected(row.getChildAt(j) == v);
+            });
+            row.addView(choice);
+        }
+    }
+
+    private void refreshMusic(TextView music) {
+        music.setText(getString(R.string.wii_music_state, getString(HomeStyle.wiiMusic(this) ? R.string.on : R.string.off)));
     }
 
     /** Four choices in a row; the saved value, or the one nearest to it, is the selected one. */

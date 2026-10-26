@@ -52,6 +52,11 @@ public final class ControlCenterActivity extends Activity {
         airplayTile = tile(R.drawable.ic_airplay, R.string.airplay, v -> open(airplayApp()));
         tile(R.drawable.ic_picture, R.string.nas_photos_settings, v -> open(new Intent(this, NasPhotoSettingsActivity.class)));
         tile(R.drawable.ic_wx_sun, R.string.appearance, v -> open(new Intent(this, AppearanceSettingsActivity.class)));
+        View style = tile(R.drawable.ic_home_settings, R.string.home_style_label, v -> {
+            HomeStyle.set(this, !HomeStyle.wii(this));
+            finish();   // Home resumes and rebuilds in the other style at once
+        });
+        setState(style, false, getString(HomeStyle.wii(this) ? R.string.home_style_wii : R.string.home_style_apple));
         // Through Home, so it rebuilds with the new choices when Launcher settings closes.
         tile(R.drawable.ic_home_settings, R.string.launcher_settings, v -> open(
                 new Intent(this, MainActivity.class).setAction(MainActivity.ACTION_LAUNCHER_SETTINGS)));
