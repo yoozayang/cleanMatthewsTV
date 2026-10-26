@@ -110,6 +110,11 @@
             android:excludeFromRecents="true"
             android:screenOrientation="landscape" />
         <activity
+            android:name=".AppearanceSettingsActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape" />
+        <activity
             android:name=".NasPhotoSettingsActivity"
             android:exported="false"
             android:excludeFromRecents="true"

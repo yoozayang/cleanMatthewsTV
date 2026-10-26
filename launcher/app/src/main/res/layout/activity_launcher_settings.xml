@@ -99,6 +99,12 @@
             android:layout_marginTop="10dp" />
 
         <TextView
+            android:id="@+id/appearanceChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="10dp"
+            android:text="@string/appearance" />
+
+        <TextView
             android:id="@+id/animationsChoice"
             style="@style/SettingsRow"
             android:layout_marginTop="28dp" />

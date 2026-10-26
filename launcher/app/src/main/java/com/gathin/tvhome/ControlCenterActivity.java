@@ -51,6 +51,7 @@ public final class ControlCenterActivity extends Activity {
         });
         airplayTile = tile(R.drawable.ic_airplay, R.string.airplay, v -> open(airplayApp()));
         tile(R.drawable.ic_picture, R.string.nas_photos_settings, v -> open(new Intent(this, NasPhotoSettingsActivity.class)));
+        tile(R.drawable.ic_wx_sun, R.string.appearance, v -> open(new Intent(this, AppearanceSettingsActivity.class)));
         // Through Home, so it rebuilds with the new choices when Launcher settings closes.
         tile(R.drawable.ic_home_settings, R.string.launcher_settings, v -> open(
                 new Intent(this, MainActivity.class).setAction(MainActivity.ACTION_LAUNCHER_SETTINGS)));
