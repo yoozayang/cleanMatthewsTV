@@ -153,4 +153,13 @@
     <string name="wx_rain">雨</string>
     <string name="wx_snow">雪</string>
     <string name="wx_storm">雷雨</string>
+    <string name="appearance">外觀效果</string>
+    <string name="sky_label">時段天空</string>
+    <string name="sky_hint">背景依電視所在地的日出日落變化：清晨、白天、黃昏與夜晚。</string>
+    <string name="weather_fx_label">天氣動態效果</string>
+    <string name="weather_fx_hint">依目前天氣：雨、雪、雲或霧、晴天的光束、夜晚的星星與螢火蟲。</string>
+    <string name="appearance_applies">回到主畫面後套用。</string>
+    <string name="level_low">弱</string>
+    <string name="level_medium">中</string>
+    <string name="level_high">強</string>
 </resources>

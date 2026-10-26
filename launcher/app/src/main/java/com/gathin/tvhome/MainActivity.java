@@ -200,6 +200,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextView statusWeather, statusSleep, statusAirplay;
     private Weather weather;
     private AirPlayStatus airPlay;
+    private WeatherEffectsView weatherFx;
+    /** The Appearance page's weather effects strength, 0 to 100 (Config.WEATHER_FX_KEY). */
+    private int weatherFxStrength;
+    /** Between onResume and onPause: the weather effects animate only then. */
+    private boolean homeResumed;
     /** The dock's top when the photo frame was last placed, to place it again when the status line comes or goes. */
     private float lastDockTop = -1;
     private TextView raceKicker, raceHeadline, raceSessions;
@@ -890,7 +895,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Hide the glass when focus leaves the tiles.
         getWindow().getDecorView().getViewTreeObserver().addOnGlobalFocusChangeListener((oldF, newF) -> {
             boolean onTile = newF != null && newF.getId() == R.id.card;
-            if (!onTile) hideGlass();
+            if (!onTile) {
+                hideGlass();
+                magnifyDock(-1);   // the dock settles back when focus goes to the photo, the top bar or a popup
+            }
         });
 
         packageFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -1068,6 +1076,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         photoFrame.start();
         weather.refresh();
         airPlay.refresh();
+        homeResumed = true;
+        weatherFx.start();
         updateSleepStatus();
         handler.postDelayed(minuteTick, MINUTE_MS);
         if (festive && diya != null) {
@@ -1241,6 +1251,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         wallpaperPlayer.stop();
         photoFrame.stop();
         airPlay.stop();
+        homeResumed = false;
+        weatherFx.stop();
         stopAmbientAnimation();
         hero.animate().cancel();
         ambient.animate().cancel();
@@ -1719,6 +1731,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     public void onTileFocused(int position, View card) {
         lastFocused = position;
         lastFocusedKey = adapter.keyAt(position);
+        magnifyDock(dockRow && !singleRow && position < COLUMNS ? position : -1);
         // Focus restored before the first layout (cold start): the tile has no size yet, and the glass
         // would be sized to 2*pad. Run again once the tile is laid out.
         if (card.getWidth() == 0) {
@@ -1971,6 +1984,31 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         photoFrame.setShown(true, animations && !reducedMotion);
     }
 
+    // ---- dock magnification (this fork) -------------------------------------------------------------
+
+    /** How much the focused tile's neighbours in the dock grow, like a Mac's Dock: the focused one zooms as before. */
+    private static final float DOCK_NEIGHBOUR_SCALE = 1.05f;
+    private int magnified = -2;
+
+    /**
+     * The dock tiles either side of the focused one grow a little, the rest stay at rest size; -1 settles them all.
+     * The focused tile's own zoom is the adapter's, so this never touches it.
+     */
+    private void magnifyDock(int focusedPos) {
+        if (focusedPos == magnified || !animations) return;
+        magnified = focusedPos;
+        int dockCount = Math.min(COLUMNS, adapter.appCount());
+        for (int i = 0; i < dockCount; i++) {
+            if (i == focusedPos) continue;
+            RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(i);
+            View card = vh == null ? null : vh.itemView.findViewById(R.id.card);
+            if (card == null || card.isFocused()) continue;
+            float s = focusedPos >= 0 && Math.abs(i - focusedPos) == 1 ? DOCK_NEIGHBOUR_SCALE : 1f;
+            card.animate().scaleX(s).scaleY(s).setDuration(reducedMotion ? 0 : 240)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.5f)).start();
+        }
+    }
+
     // ---- status line (this fork) ------------------------------------------------------------------
 
     private void setUpStatusLine() {
@@ -1978,7 +2016,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         statusWeather = findViewById(R.id.statusWeather);
         statusSleep = findViewById(R.id.statusSleep);
         statusAirplay = findViewById(R.id.statusAirplay);
+        weatherFx = findViewById(R.id.weatherFx);
+        weatherFxStrength = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).getInt(Config.WEATHER_FX_KEY, 0);
+        weatherFx.set(Weather.saved(this), weatherFxStrength, animations && !reducedMotion);
         weather = new Weather(this, now -> {
+            weatherFx.set(now, weatherFxStrength, animations && !reducedMotion);
+            if (homeResumed) weatherFx.start();
             statusWeather.setText(getString(R.string.wx_now, now.temperature, getString(now.description())));
             statusWeather.setCompoundDrawablesRelativeWithIntrinsicBounds(now.icon(), 0, 0, 0);
             showStatus(statusWeather, true);

@@ -111,6 +111,7 @@ public final class LauncherSettingsActivity extends Activity {
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
         nasPhotosChoice = findViewById(R.id.nasPhotosChoice);
         nasPhotosChoice.setOnClickListener(v -> open(new Intent(this, NasPhotoSettingsActivity.class)));
+        findViewById(R.id.appearanceChoice).setOnClickListener(v -> open(new Intent(this, AppearanceSettingsActivity.class)));
         animationsChoice = findViewById(R.id.animationsChoice);
         animationsChoice.setOnClickListener(v -> {
             animations = !animations;

@@ -41,6 +41,9 @@ final class Config {
     static final String WALLPAPER_NAME = "wallpaper.jpg";
     static final String SETTINGS_NAME = "launcher_settings";
     static final String ROWS_BELOW_DOCK_KEY = "rows_below_dock";
+    /** This fork's Appearance page: the time-of-day sky (0 to 100, over the theme's) and the weather effects. */
+    static final String SKY_CHOICE_KEY = "sky_choice";
+    static final String WEATHER_FX_KEY = "weather_fx";
     static final String WALLPAPER_CHOICE_KEY = "wallpaper_choice";
     static final String DOCK_OPACITY_KEY = "dock_opacity";
     /**
@@ -644,6 +647,8 @@ final class Config {
         int wallpaperDim = json == null ? 0 : integer(json, "wallpaper_dim", 0, 0, 90);
         int dockOpacity = json == null ? 100 : integer(json, "dock_opacity", 100, 30, 100);
         dockOpacity = chosenDockOpacity(choices.getInt(DOCK_OPACITY_KEY, -1), dockOpacity);
+        int chosenSky = choices.getInt(SKY_CHOICE_KEY, -1);
+        if (chosenSky >= 0 && chosenSky <= 100) skyIntensity = chosenSky;
         String wallpaperOrder = json == null ? WallpaperRotation.ORDER_SHUFFLE
                 : string(json, "wallpaper_order", WallpaperRotation.ORDER_SHUFFLE);
         // An unknown order must not silently change how an existing collection rotates.

@@ -74,7 +74,12 @@ public class SkyView extends View {
     private int[] sunTimes() {
         String lat = getContext().getString(R.string.latitude);
         String lon = getContext().getString(R.string.longitude);
-        if (lat.isEmpty() || lon.isEmpty()) return null;
+        if (lat.isEmpty() || lon.isEmpty()) {
+            // This fork: no place in config.xml, so the TV's own, as the weather last used it.
+            double[] place = Weather.savedPlace(getContext());
+            if (place == null) return null;
+            return Sun.riseAndSet(LocalDate.now(), place[0], place[1], ZoneId.systemDefault());
+        }
         try {
             return Sun.riseAndSet(LocalDate.now(), Double.parseDouble(lat), Double.parseDouble(lon),
                     ZoneId.systemDefault());

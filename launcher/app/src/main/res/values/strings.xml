@@ -215,4 +215,13 @@
     <string name="wx_rain">Rain</string>
     <string name="wx_snow">Snow</string>
     <string name="wx_storm">Thunderstorm</string>
+    <string name="appearance">Appearance</string>
+    <string name="sky_label">Time-of-day sky</string>
+    <string name="sky_hint">The backdrop follows the sun where the TV is: dawn, day, dusk and night.</string>
+    <string name="weather_fx_label">Weather effects</string>
+    <string name="weather_fx_hint">From the weather now: rain, snow, clouds or fog, light on a clear day, stars and fireflies at night.</string>
+    <string name="appearance_applies">Changes show when you go back to Home.</string>
+    <string name="level_low">Low</string>
+    <string name="level_medium">Medium</string>
+    <string name="level_high">Strong</string>
 </resources>

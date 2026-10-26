@@ -99,11 +99,26 @@ final class Weather {
                     e.putLong("wx_failed", System.currentTimeMillis()).apply();
                     return;
                 }
-                e.putInt("wx_temp", done.temperature).putInt("wx_code", done.code).putBoolean("wx_day", done.day)
+                e.putFloat("wx_lat", (float) lat).putFloat("wx_lon", (float) lon)
+                        .putInt("wx_temp", done.temperature).putInt("wx_code", done.code).putBoolean("wx_day", done.day)
                         .putLong("wx_at", System.currentTimeMillis()).remove("wx_failed").apply();
                 listener.onWeather(done);
             });
         }, "weather").start();
+    }
+
+    /** The place the last weather was for (rounded to about a kilometre), or null before the first fetch. */
+    static double[] savedPlace(Context context) {
+        SharedPreferences p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (!p.contains("wx_lat") || !p.contains("wx_lon")) return null;
+        return new double[]{p.getFloat("wx_lat", 0f), p.getFloat("wx_lon", 0f)};
+    }
+
+    /** The WMO code and day flag of the last answer, for the weather effects; null before the first. */
+    static Now saved(Context context) {
+        SharedPreferences p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (!p.contains("wx_temp")) return null;
+        return new Now(p.getInt("wx_temp", 0), p.getInt("wx_code", 0), p.getBoolean("wx_day", true));
     }
 
     private Location lastLocation() {
