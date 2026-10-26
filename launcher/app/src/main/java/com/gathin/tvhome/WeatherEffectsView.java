@@ -18,13 +18,13 @@ import java.util.Random;
 /**
  * This fork's weather over the backdrop, after Lumen: rain streaks, drifting snow, a thunderstorm's flashes, slow
  * clouds or fog, soft light shafts on a clear day, and twinkling stars with fireflies on a clear night. It follows
- * the status line's weather (Weather), at the Appearance page's strength. Off by default; about 30 frames a second
+ * the status line's weather (Weather), at the Appearance page's strength. Off by default; about 25 frames a second
  * while Home is on screen and none otherwise, and a single still frame with reduced motion.
  */
 public final class WeatherEffectsView extends View {
     private enum Kind { NONE, RAIN, SNOW, STORM, CLOUDS, FOG, SUN, PARTLY_DAY, NIGHT, PARTLY_NIGHT }
 
-    private static final long FRAME_MS = 33;
+    private static final long FRAME_MS = 40;   // 25 fps: the whole of Home recomposites each frame, about 14 ms of GPU on a MiTV-MOEU0
 
     private final Random random = new Random(7);
     private final Paint line = new Paint(Paint.ANTI_ALIAS_FLAG);
