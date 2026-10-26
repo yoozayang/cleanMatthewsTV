@@ -59,6 +59,18 @@ final class NasPhotoFrame {
     private boolean refused;
     /** Photos skipped as hidden in one turn before the turn gives up (a list that is almost all hidden). */
     private static final int MAX_HIDDEN_SKIPS = 500;
+    /** A favourite shows again no sooner than this; with five favourites at 20 % none comes round every minute. */
+    private static final long FAVORITE_COOLDOWN_MS = 2 * 60 * 60 * 1000L;
+    /** An "On this day" photo, at most once in this long. */
+    private static final long MEMORY_COOLDOWN_MS = 6 * 60 * 60 * 1000L;
+    /** Share of turns, on top of the favourites', that go to "On this day" when it has photos. */
+    private static final float MEMORY_SHARE = 0.12f;
+    /** When each favourite or memory was last on screen (worker thread only). */
+    private final java.util.HashMap<String, Long> lastSpecial = new java.util.HashMap<>();
+    /** The list day: "On this day" is worked out again after midnight. */
+    private java.time.LocalDate loadedDay;
+    /** Favourites changed on the TV: the cached list is read again (no fetch) on the next turn. */
+    private volatile boolean favoritesChanged;
     private final Runnable tick = this::next;
 
     NasPhotoFrame(Context context, PhotoFrameView view, boolean animations) {
@@ -132,10 +144,25 @@ final class NasPhotoFrame {
     /** "Don't show this photo" (or its whole folder): remembered for good, and the next photo comes at once. */
     void hideCurrent(boolean wholeFolder) {
         if (currentPath == null) return;
-        NasHidden hidden = NasHidden.get(context);
-        if (wholeFolder) hidden.hideFolder(currentPath);
-        else hidden.hidePhoto(currentPath);
+        NasPathSet hidden = NasPathSet.hidden(context);
+        if (wholeFolder) hidden.addFolderOf(currentPath);
+        else hidden.addPhoto(currentPath);
         skip();
+    }
+
+    /** "Show this photo more" (or its folder), or the same again to take it off; the next turns see it. */
+    void toggleFavorite(boolean wholeFolder) {
+        if (currentPath == null) return;
+        NasPathSet favorites = NasPathSet.favorites(context);
+        if (wholeFolder) {
+            if (favorites.listsFolderOf(currentPath)) favorites.removeFolderOf(currentPath);
+            else favorites.addFolderOf(currentPath);
+        } else if (favorites.listsPhoto(currentPath)) {
+            favorites.removePhoto(currentPath);
+        } else {
+            favorites.addPhoto(currentPath);
+        }
+        favoritesChanged = true;
     }
 
     void stop() {
@@ -201,18 +228,21 @@ final class NasPhotoFrame {
                     NasPhotos.setStatus(context, "empty", 0);
                     delay = Math.max(delay, 60_000L);
                 } else {
-                    NasHidden hidden = NasHidden.get(context);
+                    NasPathSet hidden = NasPathSet.hidden(context);
                     for (int i = 0, skips = 0; i < TRIES_PER_TURN && photo == null && skips < MAX_HIDDEN_SKIPS; ) {
-                        String path = index.pathAt(nextOffset());
-                        if (hidden.hides(path)) {   // hidden since the list was loaded
+                        // The first try of a turn may go to a favourite or "On this day"; retries are ordinary.
+                        String[] special = i == 0 && skips == 0 ? pickSpecial() : null;
+                        String path = special != null ? special[0] : index.pathAt(nextOffset());
+                        if (hidden.contains(path)) {   // hidden since the list was loaded
                             skips++;
                             continue;
                         }
                         i++;
                         try {
                             photo = fetch(path, w, h);
-                            label = settings.caption ? caption(path) : "";
+                            label = label(path, special == null ? null : special[1]);
                             shownPath = path;
+                            if (special != null) lastSpecial.put(path, SystemClock.elapsedRealtime());
                         } catch (NasClient.Refused e) {
                             throw e;
                         } catch (IOException | RuntimeException | OutOfMemoryError e) {
@@ -254,7 +284,20 @@ final class NasPhotoFrame {
     private void ensureIndex() throws IOException {
         long now = SystemClock.elapsedRealtime();
         boolean stale = indexFetchedAt == 0 || now - indexFetchedAt > INDEX_MAX_AGE_MS;
+        java.time.LocalDate today = java.time.LocalDate.now();
+        if (!stale && (favoritesChanged || !today.equals(loadedDay))) {
+            // Only the favourites or the date moved: read the cached list again, nothing from the NAS.
+            favoritesChanged = false;
+            loadedDay = today;
+            index = NasPhotoIndex.load(context, settings);
+            order = index.offsets().clone();
+            cursor = 0;
+            if (settings.shuffle) shuffle(order);
+            return;
+        }
         if (stale) {
+            favoritesChanged = false;
+            loadedDay = today;
             IOException failure = null;
             try {
                 NasPhotoIndex.refresh(context, client, settings);
@@ -270,6 +313,48 @@ final class NasPhotoFrame {
             if (settings.shuffle) shuffle(order);
             if (order.length == 0 && failure != null) throw failure;
         }
+    }
+
+    /**
+     * {path, "fav"|"mem"} when this turn goes to a favourite or to "On this day", or null for an ordinary one.
+     * A dice roll against the owner's share, then a few random picks for one that is past its cool-down, so a
+     * handful of favourites come round often without the frame showing nothing else.
+     */
+    private String[] pickSpecial() throws IOException {
+        float roll = random.nextFloat();
+        float favShare = settings.favoriteRate / 100f;
+        int[] favs = index.favorites();
+        if (roll < favShare && favs.length > 0) {
+            String p = cooled(favs, FAVORITE_COOLDOWN_MS);
+            if (p != null) return new String[]{p, "fav"};
+        } else if (roll < favShare + MEMORY_SHARE && index.memories().length > 0) {
+            String p = cooled(index.memories(), MEMORY_COOLDOWN_MS);
+            if (p != null) return new String[]{p, "mem"};
+        }
+        return null;
+    }
+
+    private String cooled(int[] offsets, long cooldownMs) throws IOException {
+        long now = SystemClock.elapsedRealtime();
+        for (int tries = 0; tries < Math.min(8, offsets.length * 2); tries++) {
+            String p = index.pathAt(offsets[random.nextInt(offsets.length)]);
+            Long at = lastSpecial.get(p);
+            if ((at == null || now - at >= cooldownMs) && !NasPathSet.hidden(context).contains(p)) return p;
+        }
+        return null;
+    }
+
+    /** The caption: its folder, with a heart for a favourite or "3 years ago today" for a memory. */
+    private String label(String path, String kind) {
+        String folder = settings.caption ? caption(path) : "";
+        if ("mem".equals(kind)) {
+            int[] d = NasPhotos.dateOf(path);
+            int years = d == null ? 0 : java.time.LocalDate.now().getYear() - d[0];
+            String when = context.getString(R.string.nas_memory_label, years);
+            return folder.isEmpty() ? when : when + " · " + folder;
+        }
+        if ("fav".equals(kind)) return folder.isEmpty() ? "\u2665" : "\u2665 " + folder;
+        return folder;
     }
 
     private int nextOffset() {

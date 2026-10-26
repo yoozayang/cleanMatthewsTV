@@ -159,4 +159,20 @@
     <string name="level_low">弱</string>
     <string name="level_medium">中</string>
     <string name="level_high">強</string>
+    <string name="nas_favorite_photo">♥ 多顯示這張照片</string>
+    <string name="nas_unfavorite_photo">這張照片恢復一般頻率</string>
+    <string name="nas_favorite_folder">♥ 多顯示「%1$s」的照片</string>
+    <string name="nas_unfavorite_folder">「%1$s」恢復一般頻率</string>
+    <string name="nas_favorite_done">之後會比較常出現。</string>
+    <string name="nas_unfavorite_done">已恢復一般頻率。</string>
+    <string name="nas_fav_rate_label">收藏照片出現頻率</string>
+    <string name="nas_fav_rate_low">偶爾</string>
+    <string name="nas_fav_rate_medium">適中</string>
+    <string name="nas_fav_rate_high">經常</string>
+    <string name="nas_fav_rate_hint">每張收藏照片出現後至少隔兩小時才會再出現，收藏再少也不會一直重複。</string>
+    <string name="nas_favorites_state">收藏的照片與資料夾：%1$d</string>
+    <string name="nas_favorites_none">還沒有收藏。在主畫面選到照片後按 OK 即可收藏。</string>
+    <string name="nas_memories_state">那年今日：%1$s</string>
+    <string name="nas_memories_hint">以往同一天拍的照片會稍微常出現，依檔名或資料夾名稱裡的日期判斷。</string>
+    <string name="nas_memory_label">%1$d 年前的今天</string>
 </resources>

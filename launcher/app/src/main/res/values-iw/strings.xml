@@ -214,4 +214,20 @@
     <string name="level_low">חלש</string>
     <string name="level_medium">בינוני</string>
     <string name="level_high">חזק</string>
+    <string name="nas_favorite_photo">♥ להציג את התמונה הזו יותר</string>
+    <string name="nas_unfavorite_photo">להציג את התמונה הזו כרגיל</string>
+    <string name="nas_favorite_folder">♥ להציג יותר תמונות מ־%1$s</string>
+    <string name="nas_unfavorite_folder">להציג תמונות מ־%1$s כרגיל</string>
+    <string name="nas_favorite_done">היא תופיע לעיתים קרובות יותר.</string>
+    <string name="nas_unfavorite_done">חזרה לתדירות הרגילה.</string>
+    <string name="nas_fav_rate_label">תדירות המועדפים</string>
+    <string name="nas_fav_rate_low">לפעמים</string>
+    <string name="nas_fav_rate_medium">לעיתים קרובות</string>
+    <string name="nas_fav_rate_high">לעיתים קרובות מאוד</string>
+    <string name="nas_fav_rate_hint">כל מועדפת מחכה לפחות שעתיים לפני שהיא מופיעה שוב, כך שמעט מועדפות לא דוחקות את השאר.</string>
+    <string name="nas_favorites_state">תמונות ותיקיות מועדפות: %1$d</string>
+    <string name="nas_favorites_none">אין עדיין מועדפים. בחרו תמונה במסך הבית ולחצו OK.</string>
+    <string name="nas_memories_state">ביום הזה: %1$s</string>
+    <string name="nas_memories_hint">תמונות שצולמו בתאריך של היום בשנים אחרות מופיעות קצת יותר, לפי התאריך בשם הקובץ או התיקייה.</string>
+    <string name="nas_memory_label">לפני %1$d שנים היום</string>
 </resources>

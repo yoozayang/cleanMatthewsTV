@@ -30,6 +30,12 @@ final class NasPhotos {
     static final String KEY_CAPTION = "caption";
     static final String KEY_STATUS = "last_result";
     static final String KEY_COUNT = "photo_count";
+    /** Share of turns (percent) that go to a favourite photo or folder, each with its own cool-down. */
+    static final String KEY_FAV_RATE = "favorite_rate";
+    /** "On this day": photos taken on today's date in other years come round more often. */
+    static final String KEY_MEMORIES = "memories";
+    static final int[] FAV_RATES = {0, 10, 20, 33};
+    static final int DEFAULT_FAV_RATE = 20;
 
     static final String DEFAULT_INDEX = ".tvphotos/index.txt.gz";
     static final int[] INTERVALS = {15, 30, 60, 300, 900};
@@ -48,6 +54,8 @@ final class NasPhotos {
     /** Folder prefixes ("2023/Kyoto"); empty means every folder. */
     final Set<String> folders;
     final boolean caption;
+    final int favoriteRate;
+    final boolean memories;
 
     private NasPhotos(SharedPreferences p) {
         enabled = p.getBoolean(KEY_ENABLED, false);
@@ -62,6 +70,8 @@ final class NasPhotos {
         heic = p.getBoolean(KEY_HEIC, true);
         folders = Collections.unmodifiableSet(new HashSet<>(p.getStringSet(KEY_FOLDERS, Collections.emptySet())));
         caption = p.getBoolean(KEY_CAPTION, true);
+        favoriteRate = Math.max(0, Math.min(50, p.getInt(KEY_FAV_RATE, DEFAULT_FAV_RATE)));
+        memories = p.getBoolean(KEY_MEMORIES, true);
     }
 
     static SharedPreferences prefs(Context context) {
@@ -105,6 +115,32 @@ final class NasPhotos {
             if (path.startsWith(f) && (path.length() == f.length() || path.charAt(f.length()) == '/')) return true;
         }
         return false;
+    }
+
+    private static final java.util.regex.Pattern DATE = java.util.regex.Pattern.compile(
+            "(?<!\\d)(19[7-9]\\d|20[0-4]\\d)[-_. ]?(0[1-9]|1[0-2])[-_. ]?(0[1-9]|[12]\\d|3[01])(?!\\d)");
+
+    /**
+     * The date a photo was taken, from its name or failing that the nearest folder name that holds one
+     * ("IMG_20240428_171025.jpg", "2024-03-05 19.53.43.jpg", "20101003 部長請吃飯/DSC03333.JPG"), as
+     * {year, month, day}; null when no part of the path names a date.
+     */
+    static int[] dateOf(String path) {
+        String[] parts = path.split("/");
+        for (int i = parts.length - 1; i >= 0; i--) {
+            java.util.regex.Matcher m = DATE.matcher(parts[i]);
+            if (m.find()) return new int[]{Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3))};
+        }
+        return null;
+    }
+
+    /** Taken on this month and day in an earlier year: cheap text checks first, the pattern only for a hit. */
+    static boolean onThisDay(String path, int year, int month, int day) {
+        String mm = month < 10 ? "0" + month : String.valueOf(month);
+        String dd = day < 10 ? "0" + day : String.valueOf(day);
+        if (!path.contains(dd) || !path.contains(mm)) return false;
+        int[] d = dateOf(path);
+        return d != null && d[1] == month && d[2] == day && d[0] < year;
     }
 
     /** Home rebuilds when it next resumes, as it does after a Launcher settings change. */
