@@ -194,6 +194,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private View racePanel;
     /** This fork's NAS photo frame in the space above the dock; inert unless set up and switched on. */
     private NasPhotoFrame photoFrame;
+    /** This fork's Wii-style Home (HomeStyle); null in the Apple TV style, where every view below exists. */
+    private WiiHome wii;
     private PhotoFrameView photoView;
     /** This fork's status line under the clock (weather, sleep timer, AirPlay) and its sources. */
     private View statusLine;
@@ -437,6 +439,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         sourcePanelAction = cfg.sourcePanelAction;
         sourcePanelExtra = cfg.sourcePanelExtra;
         coocaaSources = cfg.coocaaSources;
+
+        if (HomeStyle.wii(this)) {
+            // The Wii-style Home is another screen on the same HOME activity, so Home, theme.sh and
+            // set-home-activity all keep working; none of the Apple TV views below exist in this mode.
+            wii = new WiiHome(this, cfg);
+            setContentView(wii.view());
+            getWindow().setBackgroundDrawable(null);
+            if (savedInstanceState == null) openLauncherSettingsIfAsked(getIntent());
+            return;
+        }
 
         root = findViewById(R.id.root);
         root.setBackgroundColor(cfg.backgroundColor);
@@ -926,6 +938,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return true;
     }
 
+    /** For the Wii-style Home's channels: the Live TV app and Launcher settings. */
+    String liveTvPackage() {
+        return liveTvPkg;
+    }
+
+    void openLauncherSettings() {
+        startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
+    }
+
     private boolean openLauncherSettingsIfAsked(Intent intent) {
         if (intent == null || !ACTION_LAUNCHER_SETTINGS.equals(intent.getAction())) return false;
         setIntent(new Intent(Intent.ACTION_MAIN));
@@ -942,6 +963,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (openLauncherSettingsIfAsked(intent)) return;
+        if (wii != null) {
+            if (intent != null && intent.hasCategory(Intent.CATEGORY_HOME)) wii.onHome();
+            return;
+        }
         if (openInputsIfAsked(intent)) return;
         if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
         grid.scrollToPosition(0);
@@ -959,6 +984,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onStart() {
         super.onStart();
+        if (wii != null) {
+            wii.onStart();
+            return;
+        }
         stopped = false;
         started = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -973,6 +1002,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        if (wii != null) {
+            // Back from Launcher settings or Appearance with a change (the style itself, say): rebuild with it.
+            if (Config.settingsChanged(settingsRevision, settingsRevision())) {
+                recreate();
+                return;
+            }
+            wii.onResume();
+            return;
+        }
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -1179,6 +1217,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public void onUserInteraction() {
         super.onUserInteraction();
+        if (wii != null) return;
         restartIdleClock();
     }
 
@@ -1190,6 +1229,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onPause() {
         super.onPause();
+        if (wii != null) {
+            wii.onPause();
+            return;
+        }
         root.removeCallbacks(showIdleClock);
         endReorder();   // Home or another app while reordering keeps the order so far
         wallpaperPlayer.stop();
@@ -1214,6 +1257,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onStop() {
         super.onStop();
+        if (wii != null) {
+            wii.onStop();
+            return;
+        }
         started = false;
         unregisterReceiver(timeReceiver);
         handler.removeCallbacks(clockCheck);
@@ -1229,6 +1276,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
+        if (wii != null) return;
         // RUNNING_LOW and CRITICAL also arrive while Home is visible when an accessibility service keeps the
         // process in the foreground; never blank the screen the owner is looking at.
         if (!MemoryTrimPolicy.shouldRelease(level, started)) return;
@@ -1247,6 +1295,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
+        if (wii != null) {
+            wii.onWindowFocusChanged(hasFocus);
+            return;
+        }
         if (hasFocus) {
             startPendingSettingsReorder();
             if (libraryFocusPending && appLibrary == null) focusLibrary();
@@ -1257,6 +1309,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (wii != null) return;   // nothing below was registered in the Wii-style Home
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
         photoFrame.close();
@@ -1301,6 +1354,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        // Wii-style Home dimmed (screen burn-in reduction): the key only brightens it again.
+        if (wii != null) return wii.onKey(event) || super.dispatchKeyEvent(event);
         if (handleSettingsKey(event)) return true;
         if (tileMenuEnabled && !reordering && openPopup == null && cardPrompt == null
                 && event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
@@ -1628,6 +1683,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     @Override
     public void onBackPressed() {
+        if (wii != null) {
+            wii.onBack();
+            return;
+        }
         // Home screen: Back goes nowhere.
     }
 
@@ -3066,7 +3125,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
 
     /** Every settings entry shares the standard intent and the vendor fallback (SystemSettings). */
-    private Intent systemIntent(String standardAction) {
+    Intent systemIntent(String standardAction) {
         return SystemSettings.intent(this, standardAction);
     }
 
@@ -3111,7 +3170,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /** The Live TV app's launch intent: its leanback entry point, or the configured action if it has none. */
-    private Intent liveTvIntent() {
+    Intent liveTvIntent() {
         if (liveTvPkg.isEmpty()) return null;
         Intent i = getPackageManager().getLeanbackLaunchIntentForPackage(liveTvPkg);
         if (i != null || liveTvAction.isEmpty()) return i;
@@ -3144,7 +3203,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     }
 
-    private void open(Intent i) {
+    void open(Intent i) {
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try {
             startActivity(i);
@@ -3169,7 +3228,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      *  with that scheme and no MIME type. A player guarded by a permission this build does not declare
      *  throws SecurityException, which used to take Home down with it (YaOS before the manifest asked
      *  for ACCESS_TV_SOURCE). */
-    private void openInput(String inputId) {
+    void openInput(String inputId) {
         // A CEC device is a child input of its HDMI port; the vendor source number belongs to the port
         // (MiTV-MFFU0). Only that lookup uses the parent: the generic path below still opens the child.
         String sourceId = inputId;

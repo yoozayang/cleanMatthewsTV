@@ -78,6 +78,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int ambient;
         /** uniform_tiles card fill, top and bottom colour; null until sampled from the icon. */
         int[] backdrop;
+        /** ApplicationInfo.category, for the Wii-style Home's order (WiiOrder): video, music, then the rest. */
+        int category = -1;
 
         Entry(String label, ComponentName component, Drawable banner, Drawable icon) {
             this(APP, label, component, banner, icon, null, 0);
@@ -217,6 +219,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     /** Every app tile is its icon on a card tinted from that icon, never its banner (config.xml, uniform_tiles). */
     private final boolean uniformTiles;
     private final List<Entry> items = new ArrayList<>();
+    /** Wii-style Home: video, music, then the rest, instead of dock_apps then alphabetical (WiiOrder). */
+    private boolean groupByCategory;
 
     AppAdapter(Context ctx, TileListener listener, int dockSize, Config cfg) {
         this.ctx = ctx;
@@ -305,11 +309,18 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else {
                 fresh.add(new Entry(label, component, banner, icon));
             }
+            if (ri.activityInfo != null && ri.activityInfo.applicationInfo != null) {
+                fresh.get(fresh.size() - 1).category = ri.activityInfo.applicationInfo.category;
+            }
         }
         Collections.sort(fresh, (a, b) -> {
             // The owner's own order first; tiles it does not know (new installs) follow by the rule below.
             int saved = Order.compare(savedRanks, a.component.flattenToShortString(), b.component.flattenToShortString());
             if (saved != 0) return saved;
+            if (groupByCategory) {
+                int byGroup = Integer.compare(WiiOrder.rank(a.pkg, a.category), WiiOrder.rank(b.pkg, b.category));
+                return byGroup != 0 ? byGroup : a.label.compareToIgnoreCase(b.label);
+            }
             int fa = favourites.indexOf(a.pkg), fb = favourites.indexOf(b.pkg);
             if (fa >= 0 || fb >= 0) {
                 if (fa < 0) return 1;
@@ -498,7 +509,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     /** Opens the tile's activity by explicit component, with no extras: a card can name nothing else. */
-    private void launch(Entry e) {
+    void launch(Entry e) {
         if (e.kind == Entry.HOME_SETTINGS) {
             ctx.startActivity(new Intent(ctx, HomeSettingsActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -534,6 +545,32 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     int appCount() { return items.size(); }
+
+    /** For the Wii-style Home, which reads the list directly instead of through a RecyclerView. */
+    Entry entryAt(int index) { return items.get(index); }
+
+    /**
+     * Pins a tile in front of the apps from the last reload(): the Wii-style Home's screensaver channel, which is
+     * this launcher rather than an installed TV app (reload skips our own package).
+     */
+    void pinFirst(Entry entry) {
+        String key = entry.component.flattenToShortString();
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (key.equals(items.get(i).component.flattenToShortString())) items.remove(i);
+        }
+        items.add(0, entry);
+        notifyDataSetChanged();
+    }
+
+    /** These packages get no tile from the next reload(). */
+    void hidePackages(java.util.Collection<String> pkgs) {
+        hidden.addAll(pkgs);
+    }
+
+    /** Wii-style Home: orders tiles by WiiOrder from the next reload(). */
+    void setGroupByCategory(boolean on) {
+        groupByCategory = on;
+    }
 
     boolean isLibraryAt(int position) { return showLibrary && position == items.size(); }
 

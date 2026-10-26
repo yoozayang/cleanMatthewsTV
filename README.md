@@ -624,6 +624,8 @@ and a wallpaper.
     Follow theme, or push the theme again.
   - **NAS photos** (this fork): opens the NAS photo frame's own page, with its switch, how often it changes,
     folders, formats and hidden photos ([tools/nas-photos.md](tools/nas-photos.md)).
+  - **Home style** (this fork): the Apple TV style or the Wii style (WiiHome, from cleanyourtv-wii), one press
+    each way; Home rebuilds in it at once.
   - **Appearance** (this fork): the time-of-day sky and the weather effects (rain, snow, clouds, light, stars
     and fireflies), each Off, Low, Medium or Strong.
   - **Animations** on or off, and **Advanced effects** (tile lift, icon zoom and smooth ambient-colour

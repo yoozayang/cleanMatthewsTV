@@ -109,6 +109,29 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:screenOrientation="landscape" />
+        <!-- Wii-style Home: the screensaver channel's picker and its "watch now" preview. -->
+        <activity
+            android:name=".ScreensaverActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".ScreensaverPreviewActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+        <!-- Wii-style Home's video screensaver: the clip picked in the screensaver channel, muted and looping. -->
+        <service
+            android:name=".WiiDream"
+            android:label="@string/dream_wii_name"
+            android:exported="true"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
         <activity
             android:name=".AppearanceSettingsActivity"
             android:exported="false"

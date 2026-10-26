@@ -175,4 +175,19 @@
     <string name="nas_memories_state">那年今日：%1$s</string>
     <string name="nas_memories_hint">以往同一天拍的照片會稍微常出現，依檔名或資料夾名稱裡的日期判斷。</string>
     <string name="nas_memory_label">%1$d 年前的今天</string>
+    <string name="dream_wii_name">影片</string>
+    <string name="screensaver_channel">螢幕保護</string>
+    <string name="screensaver_enabled">螢幕保護已開啟</string>
+    <string name="screensaver_on">開啟</string>
+    <string name="screensaver_off">關閉</string>
+    <string name="screensaver_black">黑色畫面</string>
+    <string name="screensaver_preview">立即觀看</string>
+    <string name="screensaver_pick">選擇影片</string>
+    <string name="screensaver_empty">screensavers 資料夾裡沒有 .mp4 影片</string>
+    <string name="home_style_label">介面風格</string>
+    <string name="home_style_apple">Apple TV</string>
+    <string name="home_style_wii">Wii</string>
+    <string name="home_style_hint">Wii 風格是另一套頻道式主畫面；照片框、狀態列與控制中心屬於 Apple TV 風格。在 Wii 選單長按確認鍵可開啟桌面設定切回來。</string>
+    <string name="wii_music_state">Wii 選單音樂：%1$s</string>
+    <string name="home_style_state">介面風格：%1$s</string>
 </resources>

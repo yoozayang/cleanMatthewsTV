@@ -466,4 +466,12 @@
          faint outer glow), rim (the crisp rim alone, no sheen, fill or glow, for a quiet focus over a wallpaper) or
          halo (the rim with a lighter outer glow). Can also be set with "glass_style": "rim" in a theme's config.json. -->
     <string name="glass_style" translatable="false">glass</string>
+
+    <!-- This fork: the Wii-style Home (WiiHome, from camilocristancho14/cleanyourtv-wii, MIT), a 4x3 page of channels
+         and a curved bottom bar. Off by default; Appearance (and the control centre) switches it on the TV. -->
+    <bool name="wii_style">false</bool>
+    <!-- The Wii-style Home's calm music loop while it is in front (an original loop, not Nintendo's). -->
+    <bool name="wii_music">true</bool>
+    <!-- Minutes the Wii-style Home sits untouched before it dims, like the Wii's screen burn-in reduction. -->
+    <integer name="wii_dim_minutes">5</integer>
 </resources>
