@@ -36,6 +36,8 @@ SCREENSHOT_WANTED = {
     "tile_menu", "top_menu", "vpn_app", "wallpaper", "wallpaper_captions", "wallpaper_dim",
     "wallpaper_moods", "wallpaper_order", "wallpaper_true_color", "wifi_label_width",
     "wifi_status_color",
+    # This fork: the Wii-style Home's dimmed screen, to be taken on the TV after five idle minutes.
+    "wii_dim_minutes",
 }
 
 

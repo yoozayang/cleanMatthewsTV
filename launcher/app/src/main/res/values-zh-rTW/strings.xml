@@ -187,7 +187,7 @@
     <string name="home_style_label">介面風格</string>
     <string name="home_style_apple">Apple TV</string>
     <string name="home_style_wii">Wii</string>
-    <string name="home_style_hint">Wii 風格是另一套頻道式主畫面；照片框、狀態列與控制中心屬於 Apple TV 風格。在 Wii 選單長按確認鍵可開啟桌面設定切回來。</string>
+    <string name="home_style_hint">Wii 風格是另一套頻道式主畫面；照片框、狀態列與天氣效果屬於 Apple TV 風格。在 Wii 選單按 SD 卡按鈕可開啟控制中心，從那裡切回來。</string>
     <string name="wii_music_state">Wii 選單音樂：%1$s</string>
     <string name="home_style_state">介面風格：%1$s</string>
 </resources>

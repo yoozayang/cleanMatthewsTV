@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
 
 /**
  * The Nintendo Wii menu (config wii_style): the channels in pages of 4 columns by 3 rows (12 apps) that slide
- * sideways one page at a time, a curved tray with the clock, the wiiOS (Settings), SD (file manager) and Entradas (inputs) buttons.
+ * sideways one page at a time, a curved tray with the clock, the wiiOS (Settings; hold for Launcher settings), SD (this fork: the control centre) and inputs buttons.
  * Dark from 16:00 to 07:00 (WiiTime), switched live on the minute tick.
  * It lives inside MainActivity, so the launcher is still the one HOME activity. D-pad navigation is explicit,
  * not left to focus search.
@@ -51,7 +51,6 @@ final class WiiHome {
     private static final int SCROLL_MS = 300, HAND_MS = 150;
     /** Width over height of the cursor drawables (same viewport for the open hand and the fist). */
     private static final float HAND_ASPECT = 34.88f / 49.38f;
-    private static final String FILE_MANAGER = "com.alphainventor.filemanager";
     private static final String HDMI_SERVICE = "com.mediatek.tis/.HdmiInputService/";
 
     private final MainActivity act;
@@ -595,9 +594,11 @@ final class WiiHome {
             act.openLauncherSettings();
             return true;
         });
+        // This fork: the SD card opens the control centre (sleep timer, Home style, Appearance, TV settings), the
+        // same panel as the Apple TV style's top-right pill, so the way back to it is one press away.
         root.sd.setOnClickListener(v -> {
             confirmSound();
-            openFileManager();
+            act.open(new Intent(act, ControlCenterActivity.class));
         });
         root.inputs.setOnClickListener(v -> {
             confirmSound();
@@ -607,16 +608,6 @@ final class WiiHome {
 
     private void confirmSound() {
         if (sounds != null) sounds.confirm();
-    }
-
-    private void openFileManager() {
-        Intent i = act.getPackageManager().getLeanbackLaunchIntentForPackage(FILE_MANAGER);
-        if (i == null) i = act.getPackageManager().getLaunchIntentForPackage(FILE_MANAGER);
-        if (i == null) {
-            Toast.makeText(act, R.string.not_available, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        act.open(i);
     }
 
     // ---- hand cursor and focus sounds ------------------------------------------------------------

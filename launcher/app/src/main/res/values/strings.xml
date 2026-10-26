@@ -247,7 +247,7 @@
     <string name="home_style_label">Home style</string>
     <string name="home_style_apple">Apple TV</string>
     <string name="home_style_wii">Wii</string>
-    <string name="home_style_hint">The Wii-style Home has its own page of channels; the photo frame, status line and control centre belong to the Apple TV style. Hold OK in the Wii menu for Launcher settings to switch back.</string>
+    <string name="home_style_hint">The Wii-style Home has its own page of channels; the photo frame, status line and weather belong to the Apple TV style. In the Wii menu the SD card opens the control centre, with this switch.</string>
     <string name="wii_music_state">Wii menu music: %1$s</string>
     <string name="home_style_state">Home style: %1$s</string>
 </resources>

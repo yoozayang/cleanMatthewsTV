@@ -24,6 +24,8 @@ public final class ControlCenterActivity extends Activity {
     private View sleepTile;
     private View frameTile;
     private View airplayTile;
+    /** Only when nothing has looked for AirPlay yet (the Wii-style Home has no status line to do it). */
+    private AirPlayStatus airPlay;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -63,6 +65,10 @@ public final class ControlCenterActivity extends Activity {
         tile(R.drawable.ic_settings, R.string.tv_settings, v -> open(SystemSettings.intent(this, Settings.ACTION_SETTINGS)));
         refresh();
         sleepTile.requestFocus();
+        if (!AirPlayStatus.known()) {
+            airPlay = new AirPlayStatus(this, (name, known) -> refresh());
+            airPlay.refresh();
+        }
     }
 
     /** The control pill pressed again while the panel is up. */
@@ -75,6 +81,7 @@ public final class ControlCenterActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        if (airPlay != null) airPlay.stop();
         finish();
         overridePendingTransition(0, 0);
     }

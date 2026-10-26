@@ -1107,7 +1107,7 @@ final class WiiViews {
             sd = new Control(ctx, Control.SD, u, font, look);
             inputs = new Control(ctx, Control.INPUTS, u, font, look);
             os.setContentDescription("Ajustes");
-            sd.setContentDescription("Archivos");
+            sd.setContentDescription(ctx.getString(R.string.control_center));
             inputs.setContentDescription("Entradas");
             addView(os);
             addView(sd);

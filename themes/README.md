@@ -133,7 +133,7 @@ A new key needs one there in the same pull request.
 | `clock_wallpaper_dim` | 0 to 90 | How dark that wallpaper is behind the clock, in percent (50 by default) |
 | `clock_glow` | bool | The clock screensaver's coloured glow (`true` by default); `false` leaves the moving clock on plain black, e.g. for an OLED |
 | `wii_style` | bool | This fork, config.xml only: the Wii-style Home (WiiHome) instead of the Apple TV style (`false` by default). Switched on the TV in Appearance, the control centre or Launcher settings |
-| `wii_music` | bool | This fork, config.xml only: the Wii-style Home's calm music loop while it is in front (`true` by default); also in Appearance |
+| `wii_music` | bool | This fork, config.xml only: the Wii-style Home's calm music loop while it is in front (`false` by default in this fork); also in Appearance |
 | `wii_dim_minutes` | 0 to 1440 | This fork, config.xml only: minutes the Wii-style Home sits untouched before it dims (5 by default) |
 | `glow_style` | string | Shape of the glow behind the focused app, in its colour: `radial` (default) or `horizon`, the colour washing down from the top edge to black; the cinematic shelf keeps its own |
 | `glass_style` | string | Look of the focus highlight: `glass` (default: a translucent slab with a bright top sheen, a crisp rim and a faint outer glow), `rim` (the crisp rim alone, no sheen, fill or glow, for a quiet focus over a wallpaper) or `halo` (the rim with a lighter outer glow) |

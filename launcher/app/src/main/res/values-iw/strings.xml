@@ -242,7 +242,7 @@
     <string name="home_style_label">סגנון מסך הבית</string>
     <string name="home_style_apple">Apple TV</string>
     <string name="home_style_wii">Wii</string>
-    <string name="home_style_hint">מסך הבית בסגנון Wii הוא דף ערוצים משלו; מסגרת התמונות, שורת המצב ומרכז הבקרה שייכים לסגנון Apple TV. לחיצה ארוכה על OK בתפריט ה־Wii פותחת את הגדרות המפעיל כדי לחזור.</string>
+    <string name="home_style_hint">מסך הבית בסגנון Wii הוא דף ערוצים משלו; מסגרת התמונות, שורת המצב ומזג האוויר שייכים לסגנון Apple TV. בתפריט ה־Wii כרטיס ה־SD פותח את מרכז הבקרה, ובו המתג הזה.</string>
     <string name="wii_music_state">מוזיקת תפריט ה־Wii: %1$s</string>
     <string name="home_style_state">סגנון מסך הבית: %1$s</string>
 </resources>
