@@ -513,8 +513,9 @@
     <!-- This fork: the Wii-style Home (WiiHome, from camilocristancho14/cleanyourtv-wii, MIT), a 4x3 page of channels
          and a curved bottom bar. Off by default; Appearance (and the control centre) switches it on the TV. -->
     <bool name="wii_style">false</bool>
-    <!-- The Wii-style Home's calm music loop while it is in front (an original loop, not Nintendo's). -->
-    <bool name="wii_music">true</bool>
+    <!-- The Wii-style Home's calm music loop while it is in front (an original loop, not Nintendo's). Off by
+         default in this fork; Appearance switches it on. -->
+    <bool name="wii_music">false</bool>
     <!-- Minutes the Wii-style Home sits untouched before it dims, like the Wii's screen burn-in reduction. -->
     <integer name="wii_dim_minutes">5</integer>
 </resources>

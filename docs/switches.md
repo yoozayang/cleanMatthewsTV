@@ -26,6 +26,8 @@ fits the rules; keys from before the rule sit on its wanted list until a screens
 |---|---|
 | `columns` | <img src="../themes/six-columns/screenshot.jpg" width="320" alt="columns on a TV"> |
 | `glass_style` | <img src="switches/glass_style.jpg" width="320" alt="glass_style halo on a TV"> |
+| `wii_style` | <img src="switches/wii_style.jpg" width="320" alt="wii_style on a TV"> |
+| `wii_music` | <img src="switches/wii_music.jpg" width="320" alt="wii_music on a TV"> |
 | `sky_intensity` | <img src="sky-sunset.jpg" width="320" alt="sky_intensity on a TV"> |
 | `wallpaper_rotation_minutes` | <img src="../themes/scenes/screenshot.jpg" width="320" alt="wallpaper_rotation_minutes on a TV"> |
 | `festival` | <img src="../themes/dussehra/screenshot.jpg" width="320" alt="festival on a TV"> |
