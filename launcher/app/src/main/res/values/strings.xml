@@ -18,6 +18,7 @@
     <string name="good_night">Good night</string>
     <string name="festival_dussehra_greeting">Happy Dussehra</string>
     <string name="festival_diwali_greeting">Happy Diwali</string>
+    <string name="festival_halloween_greeting">Happy Halloween</string>
     <string name="ethernet">Ethernet</string>
     <string name="offline">Offline</string>
     <string name="not_available">Not available on this TV</string>
@@ -255,4 +256,7 @@
     <string name="home_style_hint">The Wii-style Home has its own page of channels; the photo frame, status line and weather belong to the Apple TV style. In the Wii menu the SD card opens the control centre, with this switch.</string>
     <string name="wii_music_state">Wii menu music: %1$s</string>
     <string name="home_style_state">Home style: %1$s</string>
+    <string name="clock_format_system">System</string>
+    <string name="clock_format_12">12-hour</string>
+    <string name="clock_format_24">24-hour</string>
 </resources>

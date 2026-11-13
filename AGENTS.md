@@ -1,8 +1,9 @@
 # AGENTS.md
 
-Instructions for coding agents (Claude Code, Codex, Gemini CLI, Cursor, Copilot and others) working in
-this repository. People should start with [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md);
-this file repeats their rules in the form an agent needs, and links to them for the detail.
+Instructions for coding agents (Claude Code, Codex, Gemini CLI, Cursor, Copilot, DeepSeek Harness and
+others) working in this repository. People should start with [README.md](README.md) and
+[CONTRIBUTING.md](CONTRIBUTING.md); this file repeats their rules in the form an agent needs, and links
+to them for the detail.
 
 ## First: which job are you doing?
 
@@ -71,7 +72,7 @@ share their TV's list afterwards, follow [`docs/workflows/tv-list.md`](docs/work
 | Path | What it is |
 |---|---|
 | `PROMPT.md` | The prompt people paste into their agent. Brand-neutral; safety rules live here. |
-| `README.md` | Front page, with the TV table (generated from `examples/*/tv.json` by `tools/gen_tables.py`) and the Tools table. `README.zh-CN.md` and `README.vi.md` are translations. |
+| `README.md` | Front page, with the brand grid (generated from `examples/*/tv.json` by `tools/gen_tables.py`) and the Tools table. Longer guides it links live in `docs/`: `launcher.md`, `restore.md`, `firmware-updates.md`, `privacy.md` and `faq.md`. `README.<lang>.md` are its translations (`zh-CN`, `zh-TW`, `vi`, `ja`, `it`, `nl`, `de`, `uk`, `tr`, `uz`, `fr`, `es`). |
 | `CONTRIBUTING.md` | The contributor guide for people. "Where does my idea go?" is the routing table. |
 | `SECURITY.md` | Private vulnerability reporting. |
 | `SHOWCASE.md` | Projects built on this repo that live in their own repositories. |
@@ -117,6 +118,7 @@ use it and ends with the check to run.
 - [`showcase.md`](docs/workflows/showcase.md): list a project that lives in its own repository.
 - [`press.md`](docs/workflows/press.md): add an article and update the four press counts.
 - [`docs-notes.md`](docs/workflows/docs-notes.md): add a troubleshooting entry or a `PROMPT.md` fix, keeping pinned facts.
+- [`input-sources.md`](docs/workflows/input-sources.md): diagnose or change HDMI/AV input switching, with the checklist to run every time.
 - [`perf-ab.md`](docs/workflows/perf-ab.md): an optional check of a launcher change for performance regressions with
   `tools/bench.py`, and measure an improvement or a failed check with traces, a report and flame charts.
 
@@ -127,7 +129,7 @@ use it and ends with the check to run.
 | Tests, as CI runs them | `tools/venv/bin/python -m unittest discover -s tests -v` after `python3 -m venv tools/venv` and `tools/venv/bin/pip install -r tools/requirements.txt`. On `main`, CI sets `CLEANYOURTV_STRICT=1`, and its "README tables" job checks that the TV tables and counts are what `tools/gen_tables.py` writes. On Windows the suites that drive `tools/*.sh` report as skipped: they need a POSIX shell, and CI runs them. |
 | Launcher, if you touched `launcher/` | JDK 17, Android SDK platform 34, build-tools 34.0.0. In `launcher/`: `./gradlew --no-daemon testReleaseUnitTest lintRelease assembleRelease`. Lint must stay at zero errors. |
 | APK size gate | `launcher/app/build/outputs/apk/release/app-release.apk` must be under 786,432 B (768 KB) in this fork (upstream: 589,824 B, 576 KB). Linux: `stat -c %s`, macOS: `stat -f %z`. |
-| README rows | A new list adds only its folder, with a `tv.json`: the TV tables, the brand line and the counts are generated after merging, so leave them alone. A theme has its row in `themes/README.md`; an add-on in `addons/README.md`. |
+| README rows | A new list adds only its folder, with a `tv.json`: the TV tables, the brand grid and the counts are generated after merging, so leave them alone. A theme has its row in `themes/README.md`; an add-on in `addons/README.md`. |
 | One topic per PR | A TV list never rides inside a launcher feature PR. A device's list plus small fixes for that same device can be one PR. |
 | Tested on | Say which TV, Android version and firmware you tested on, in the PR template's "Tested on" line. |
 | Real TV | Launcher changes are verified on a real TV, not only the emulator: `tools/tv.py --screenshot shots/after.png DPAD_DOWN`. D-pad from every edge (Up, Down, Left, Right). A button handled by an accessibility helper needs a press on the real remote, and a force-stop of the launcher switches the helpers off (`docs/TROUBLESHOOTING.md`). |

@@ -193,4 +193,7 @@
     <string name="home_style_hint">Wii 風格是另一套頻道式主畫面；照片框、狀態列與天氣效果屬於 Apple TV 風格。在 Wii 選單按 SD 卡按鈕可開啟控制中心，從那裡切回來。</string>
     <string name="wii_music_state">Wii 選單音樂：%1$s</string>
     <string name="home_style_state">介面風格：%1$s</string>
+    <string name="clock_format_system">系統</string>
+    <string name="clock_format_12">12 小時制</string>
+    <string name="clock_format_24">24 小時制</string>
 </resources>
