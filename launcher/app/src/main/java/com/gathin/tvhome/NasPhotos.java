@@ -34,8 +34,8 @@ final class NasPhotos {
     static final String KEY_FAV_RATE = "favorite_rate";
     /** "On this day": photos taken on today's date in other years come round more often. */
     static final String KEY_MEMORIES = "memories";
-    static final int[] FAV_RATES = {0, 10, 20, 33};
-    static final int DEFAULT_FAV_RATE = 20;
+    static final int[] FAV_RATES = {0, 1, 2, 3};
+    static final int DEFAULT_FAV_RATE = 3;
 
     static final String DEFAULT_INDEX = ".tvphotos/index.txt.gz";
     static final int[] INTERVALS = {15, 30, 60, 300, 900};
@@ -70,7 +70,7 @@ final class NasPhotos {
         heic = p.getBoolean(KEY_HEIC, true);
         folders = Collections.unmodifiableSet(new HashSet<>(p.getStringSet(KEY_FOLDERS, Collections.emptySet())));
         caption = p.getBoolean(KEY_CAPTION, true);
-        favoriteRate = Math.max(0, Math.min(50, p.getInt(KEY_FAV_RATE, DEFAULT_FAV_RATE)));
+        favoriteRate = Math.max(0, Math.min(3, p.getInt(KEY_FAV_RATE, DEFAULT_FAV_RATE)));
         memories = p.getBoolean(KEY_MEMORIES, true);
     }
 

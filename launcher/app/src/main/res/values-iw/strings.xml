@@ -225,9 +225,9 @@
     <string name="nas_favorite_done">היא תופיע לעיתים קרובות יותר.</string>
     <string name="nas_unfavorite_done">חזרה לתדירות הרגילה.</string>
     <string name="nas_fav_rate_label">תדירות המועדפים</string>
-    <string name="nas_fav_rate_low">לפעמים</string>
-    <string name="nas_fav_rate_medium">לעיתים קרובות</string>
-    <string name="nas_fav_rate_high">לעיתים קרובות מאוד</string>
+    <string name="nas_fav_rate_low">1%</string>
+    <string name="nas_fav_rate_medium">2%</string>
+    <string name="nas_fav_rate_high">3%</string>
     <string name="nas_fav_rate_hint">כל מועדפת מחכה לפחות שעתיים לפני שהיא מופיעה שוב, כך שמעט מועדפות לא דוחקות את השאר.</string>
     <string name="nas_favorites_state">תמונות ותיקיות מועדפות: %1$d</string>
     <string name="nas_favorites_none">אין עדיין מועדפים. בחרו תמונה במסך הבית ולחצו OK.</string>

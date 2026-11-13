@@ -31,6 +31,7 @@ final class NasPhotoIndex {
     /** Of those, the favourites (NasPathSet.favorites) and the ones taken on this day in other years. */
     private int[] favorites = new int[0], memories = new int[0];
     private int favCount, memCount;
+    private int[][] folderOffsets = new int[0][];
 
     private NasPhotoIndex(File file) {
         this.file = file;
@@ -80,9 +81,17 @@ final class NasPhotoIndex {
         NasPathSet favorites = NasPathSet.favorites(context);
         boolean anyFavorite = favorites.size() > 0;
         java.time.LocalDate today = java.time.LocalDate.now();
+        java.util.Map<String, IntList> folderMap = new java.util.HashMap<>();
         index.scan((offset, path) -> {
             if (!settings.wantsType(path) || !settings.wantsFolder(path) || hidden.contains(path)) return;
             index.add(offset);
+            String folder = NasPathSet.folderOf(path);
+            IntList list = folderMap.get(folder);
+            if (list == null) {
+                list = new IntList();
+                folderMap.put(folder, list);
+            }
+            list.add(offset);
             if (anyFavorite && favorites.contains(path)) index.favorites = index.push(index.favorites, index.favCount++, offset);
             if (settings.memories && NasPhotos.onThisDay(path, today.getYear(), today.getMonthValue(), today.getDayOfMonth())) {
                 index.memories = index.push(index.memories, index.memCount++, offset);
@@ -91,6 +100,11 @@ final class NasPhotoIndex {
         index.offsets = Arrays.copyOf(index.offsets, index.count);
         index.favorites = Arrays.copyOf(index.favorites, index.favCount);
         index.memories = Arrays.copyOf(index.memories, index.memCount);
+        index.folderOffsets = new int[folderMap.size()][];
+        int fi = 0;
+        for (IntList l : folderMap.values()) {
+            index.folderOffsets[fi++] = l.toArray();
+        }
         return index;
     }
 
@@ -129,6 +143,10 @@ final class NasPhotoIndex {
 
     int[] memories() {
         return memories;
+    }
+
+    int[][] folderOffsets() {
+        return folderOffsets;
     }
 
     private int[] push(int[] a, int at, int value) {
@@ -190,5 +208,17 @@ final class NasPhotoIndex {
         if (len > 0 && line[len - 1] == '\r') len--;
         if (len == 0 || line[0] == '#') return;
         visitor.visit(start, new String(line, 0, len, StandardCharsets.UTF_8));
+    }
+
+    private static final class IntList {
+        int[] data = new int[16];
+        int size = 0;
+        void add(int v) {
+            if (size == data.length) data = Arrays.copyOf(data, data.length * 2);
+            data[size++] = v;
+        }
+        int[] toArray() {
+            return Arrays.copyOf(data, size);
+        }
     }
 }

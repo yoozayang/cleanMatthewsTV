@@ -290,9 +290,8 @@ final class NasPhotoFrame {
             favoritesChanged = false;
             loadedDay = today;
             index = NasPhotoIndex.load(context, settings);
-            order = index.offsets().clone();
+            order = buildOrder();
             cursor = 0;
-            if (settings.shuffle) shuffle(order);
             return;
         }
         if (stale) {
@@ -308,9 +307,8 @@ final class NasPhotoFrame {
             }
             indexFetchedAt = now;
             index = NasPhotoIndex.load(context, settings);
-            order = index.offsets().clone();
+            order = buildOrder();
             cursor = 0;
-            if (settings.shuffle) shuffle(order);
             if (order.length == 0 && failure != null) throw failure;
         }
     }
@@ -360,9 +358,72 @@ final class NasPhotoFrame {
     private int nextOffset() {
         if (cursor >= order.length) {
             cursor = 0;
-            if (settings.shuffle) shuffle(order);
+            if (settings.shuffle) order = buildOrder();
         }
         return order[cursor++];
+    }
+
+    private int[] buildOrder() {
+        int[][] folders = index != null ? index.folderOffsets() : null;
+        if (!settings.shuffle || folders == null || folders.length <= 1) {
+            int[] ord = index != null ? index.offsets().clone() : new int[0];
+            if (settings.shuffle) shuffle(ord);
+            return ord;
+        }
+        int[][] fCopies = new int[folders.length][];
+        int[] ptrs = new int[folders.length];
+        int[] remaining = new int[folders.length];
+        int total = 0;
+        for (int i = 0; i < folders.length; i++) {
+            fCopies[i] = folders[i].clone();
+            shuffle(fCopies[i]);
+            remaining[i] = fCopies[i].length;
+            total += remaining[i];
+        }
+        int[] ord = new int[total];
+        int lastFolder = -1;
+        for (int step = 0; step < total; step++) {
+            int candidateCount = 0;
+            int totalActive = countFoldersWithRemaining(remaining);
+            for (int i = 0; i < folders.length; i++) {
+                if (remaining[i] > 0 && (i != lastFolder || totalActive == 1)) {
+                    candidateCount++;
+                }
+            }
+            double totalWeight = 0;
+            for (int i = 0; i < folders.length; i++) {
+                if (remaining[i] > 0 && (i != lastFolder || totalActive == 1)) {
+                    totalWeight += Math.sqrt(remaining[i]);
+                }
+            }
+            double r = random.nextDouble() * totalWeight;
+            int chosenFolder = -1;
+            double sum = 0;
+            for (int i = 0; i < folders.length; i++) {
+                if (remaining[i] > 0 && (i != lastFolder || totalActive == 1)) {
+                    sum += Math.sqrt(remaining[i]);
+                    if (r <= sum) {
+                        chosenFolder = i;
+                        break;
+                    }
+                }
+            }
+            if (chosenFolder == -1) {
+                for (int i = 0; i < folders.length; i++) {
+                    if (remaining[i] > 0) { chosenFolder = i; break; }
+                }
+            }
+            ord[step] = fCopies[chosenFolder][ptrs[chosenFolder]++];
+            remaining[chosenFolder]--;
+            lastFolder = chosenFolder;
+        }
+        return ord;
+    }
+
+    private static int countFoldersWithRemaining(int[] remaining) {
+        int c = 0;
+        for (int r : remaining) if (r > 0) c++;
+        return c;
     }
 
     private void shuffle(int[] a) {

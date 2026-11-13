@@ -232,10 +232,10 @@
     <string name="nas_favorite_done">It will come round more often.</string>
     <string name="nas_unfavorite_done">Back to the usual share.</string>
     <string name="nas_fav_rate_label">Favourites come round</string>
-    <string name="nas_fav_rate_low">Now and then</string>
-    <string name="nas_fav_rate_medium">Often</string>
-    <string name="nas_fav_rate_high">Very often</string>
-    <string name="nas_fav_rate_hint">Each favourite waits at least two hours before it shows again, so a few favourites never crowd out the rest.</string>
+    <string name="nas_fav_rate_low">1%</string>
+    <string name="nas_fav_rate_medium">2%</string>
+    <string name="nas_fav_rate_high">3%</string>
+    <string name="nas_fav_rate_hint">Each favourite waits at least two hours before it shows again, appearing at most 3% of turns.</string>
     <string name="nas_favorites_state">Favourite photos and folders: %1$d</string>
     <string name="nas_favorites_none">No favourites yet. Select a photo on Home and press OK.</string>
     <string name="nas_memories_state">On this day: %1$s</string>
